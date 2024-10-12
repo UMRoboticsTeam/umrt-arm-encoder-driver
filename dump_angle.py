@@ -78,7 +78,7 @@ def dump_just_angle():
                         # Take the encoder reply "55 55 aa bb cc dd ee ff" data as an example to calculate
                         # Angle calculation method: Angle register value = (0xbb << 8) | 0xaa
                         #                           Angle (°) = Angle register value * 360 / 32768
-                        angle_register = msg.data[3] << 8 | msg.data[2]
+                        angle_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
                         angle = angle_register * 360 / 32768
 
                         # From translated manual:
@@ -89,7 +89,7 @@ def dump_just_angle():
                         # The manual does not state how to calculate the angular velocity register value, but since
                         # the angle register uses 'aa bb', and the number of revolutions uses 'ee ff', the angular
                         # velocity presumably comes from 'cc dd'
-                        angular_velocity_register = msg.data[5] << 8 | msg.data[4]
+                        angular_velocity_register = int.from_bytes([msg.data[4], msg.data[5]], byteorder='little', signed=True)
                         angular_velocity = angular_velocity_register * 360 / 32768 / 0.1
 
                         # From translated manual:
