@@ -74,10 +74,13 @@ def dump_just_angle():
                 msg = bus.recv(1)
                 if msg is not None and len(msg.data) == 8:
                     if msg.data[0] == 0x55 and msg.data[1] == 0x55:
-                        output_msg = []
-                        output_msg.append(msg.data[2])
-                        output_msg.append(msg.data[3])
-                        print(output_msg)
+                        # From translated manual:
+                        # Take the encoder reply "55 55 aa bb cc dd ee ff" data as an example to calculate
+                        # Angle calculation method: Angle register value = (0xbb << 8) | 0xaa
+                        #                           Angle (°) = Angle register value * 360 / 32768
+                        angle_register = msg.data[3] << 8 | msg.data[2]
+                        angle = angle_register * 360 / 32768
+                        print(f"{angle_register} = {angle}°")
 
         except KeyboardInterrupt:
             pass  # exit normally
