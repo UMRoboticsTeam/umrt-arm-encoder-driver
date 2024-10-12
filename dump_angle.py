@@ -80,7 +80,25 @@ def dump_just_angle():
                         #                           Angle (°) = Angle register value * 360 / 32768
                         angle_register = msg.data[3] << 8 | msg.data[2]
                         angle = angle_register * 360 / 32768
-                        print(f"{angle_register} = {angle}°")
+
+                        # From translated manual:
+                        # Angular velocity (°/s) = angular velocity register value * 360 / 32768
+                        #                          / angular velocity sampling time (s)
+                        # Note: The above angular velocity sampling time is calculated in seconds, the default is 0.1s
+                        #
+                        # The manual does not state how to calculate the angular velocity register value, but since
+                        # the angle register uses 'aa bb', and the number of revolutions uses 'ee ff', the angular
+                        # velocity presumably comes from 'cc dd'
+                        angular_velocity_register = msg.data[5] << 8 | msg.data[4]
+                        angular_velocity = angular_velocity_register * 360 / 32768 / 0.1
+
+                        # From translated manual:
+                        # Number of revolutions = (0xff << 8) | 0xee
+                        number_of_rotations = int.from_bytes([msg.data[6], msg.data[7]], byteorder='little', signed=True)
+
+                        print(f"{angle_register:<5} = {angle:<15}°\t\t"
+                              f"{angular_velocity_register:<5} = {angular_velocity:.2f} °/s\t\t"
+                              f"{number_of_rotations} rotations")
 
         except KeyboardInterrupt:
             pass  # exit normally
