@@ -245,7 +245,7 @@ def get_return_rate(bus):
         case 0x0D:
             return 2000
         case 0x0E:
-            return 'single-return'
+            return 'single_return'
     return 'error'
 
 
@@ -283,7 +283,7 @@ def set_return_rate(bus, return_rate, unlock=True):
             payload[0] = 0x0C
         case 2000:
             payload[0] = 0x0D
-        case 'single-return':
+        case 'single_return':
             payload[0] = 0x0E
         case _:
             raise ValueError('Invalid rate provided')
