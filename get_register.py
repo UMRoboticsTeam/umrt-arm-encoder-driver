@@ -411,7 +411,8 @@ def test():
 
         print()
 
-        print("Unlocking, writing, saving, and restarting, should now be counterclockwise")
+        print("Double-unlocking, writing, saving, and restarting, should now be counterclockwise")
+        bus.send(unlock_msg)
         bus.send(unlock_msg)
         send_write_request(bus, Register.SPIN_DIR, [0x01, 0x00], unlock=False)
         send_write_request(bus, Register.FACTORY_RESET, [0x00, 0x00], unlock=False)
@@ -436,7 +437,6 @@ def test():
 
         print()
 
-        # Write clockwise, save, restart
         print("Resetting to clockwise and restarting")
         send_write_request(bus, Register.SPIN_DIR, [0x00, 0x00], unlock=False)
         send_write_request(bus, Register.FACTORY_RESET, [0x00, 0x00], unlock=False)
