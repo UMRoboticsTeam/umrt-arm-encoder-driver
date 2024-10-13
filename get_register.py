@@ -6,6 +6,7 @@ COM_PORT = 'COM5'
 DEVICE_ADDR = 0x50
 
 import can
+import time
 from enum import IntEnum
 
 
@@ -132,7 +133,26 @@ def send_read_request(bus, register: Register):
         print("Error sending CAN message")
 
 
-def send_and_wait(bus, register: Register):
+def send_write_request(bus, register: Register, payload):
+    assert(len(payload) == 2)
+
+    # Send unlock command then message
+    unlock_msg = can.Message(arbitration_id=DEVICE_ADDR,
+                      data=[0xFF, 0xAA, 0x69, 0x88, 0xB5],
+                      is_extended_id=False)
+
+    msg = can.Message(arbitration_id=DEVICE_ADDR,
+                      data=[0xFF, 0xAA, register, payload[0], payload[1]],
+                      is_extended_id=False)
+
+    try:
+        #bus.send(unlock_msg)
+        bus.send(msg)
+    except can.CanError:
+        print("Error sending CAN message")
+
+
+def send_read_and_wait(bus, register: Register):
     send_read_request(bus, register)
 
     try:
@@ -147,12 +167,27 @@ def send_and_wait(bus, register: Register):
         pass  # exit normally
 
 
+def send_write_and_wait(bus, register: Register, payload):
+    send_write_request(bus, register, payload)
+    return can.message.Message()
+    try:
+        waiting_for_response = True
+        while waiting_for_response:
+            msg = bus.recv(1)
+            if msg is not None and len(msg.data) == 8:
+                if msg.data[0] == 0x55 and (msg.data[1] != 0x55 and msg.data[1] != 0x56) or msg.data[0] != 0x55:
+                    print(msg)
+
+    except KeyboardInterrupt:
+        pass  # exit normally
+
+
 def get_factory_reset(bus):
-    return list(send_and_wait(bus, Register.FACTORY_RESET).data)
+    return list(send_read_and_wait(bus, Register.FACTORY_RESET).data)
 
 
 def get_content_mode(bus):
-    msg = send_and_wait(bus, Register.CONTENT_MODE)
+    msg = send_read_and_wait(bus, Register.CONTENT_MODE)
     match msg.data[2]:
         case 0x01:
             return 'angles'
@@ -164,7 +199,7 @@ def get_content_mode(bus):
 
 
 def get_return_rate(bus):
-    msg = send_and_wait(bus, Register.RETURN_RATE)
+    msg = send_read_and_wait(bus, Register.RETURN_RATE)
     match msg.data[2]:
         case 0x00:
             return 0.1
@@ -200,7 +235,7 @@ def get_return_rate(bus):
 
 
 def get_baud_rate(bus):
-    msg = send_and_wait(bus, Register.BAUD_RATE)
+    msg = send_read_and_wait(bus, Register.BAUD_RATE)
     match msg.data[2]:
         case 0x00:
             return 1000
@@ -236,7 +271,7 @@ def get_baud_rate(bus):
 
 
 def get_encoder_mode(bus):
-    msg = send_and_wait(bus, Register.ENCODER_MODE)
+    msg = send_read_and_wait(bus, Register.ENCODER_MODE)
     match msg.data[2]:
         case 0x00:
             return 'single'
@@ -247,13 +282,13 @@ def get_encoder_mode(bus):
 
 # Returns the angle register value, to convert to degrees perform get_ang_val(bus) * 360 / 32768
 def get_ang_val(bus):
-    msg = send_and_wait(bus, Register.ANG_VAL)
+    msg = send_read_and_wait(bus, Register.ANG_VAL)
     angle_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
     return angle_register
 
 
 def get_revolutions(bus):
-    msg = send_and_wait(bus, Register.REVOLUTIONS)
+    msg = send_read_and_wait(bus, Register.REVOLUTIONS)
     num_revolutions = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
     return num_revolutions
 
@@ -261,20 +296,20 @@ def get_revolutions(bus):
 # Returns the angular velocity register value, to convert to degrees/s perform
 #   get_angular_vel(bus) * 360 / 32768 / get_angular_vel_sample_period(bus) / 10e5
 def get_angular_vel(bus):
-    msg = send_and_wait(bus, Register.ANGULAR_VEL)
+    msg = send_read_and_wait(bus, Register.ANGULAR_VEL)
     angular_velocity_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
     return angular_velocity_register
 
 
 # Returns in centidegrees Celsius, to convert to degrees celsius perform get_temperature(bus) / 100
 def get_temperature(bus):
-    msg = send_and_wait(bus, Register.TEMPERATURE)
+    msg = send_read_and_wait(bus, Register.TEMPERATURE)
     temperature_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
     return temperature_register
 
 
 def get_spin_dir(bus):
-    msg = send_and_wait(bus, Register.SPIN_DIR)
+    msg = send_read_and_wait(bus, Register.SPIN_DIR)
     match msg.data[2]:
         case 0x00:
             return 'clockwise'
@@ -284,34 +319,38 @@ def get_spin_dir(bus):
 
 # Returns in 10^-4 seconds, i.e. hundreds of microseconds
 def get_angular_vel_sample_period(bus):
-    msg = send_and_wait(bus, Register.ANGULAR_VEL_SAMPLE_PERIOD)
+    msg = send_read_and_wait(bus, Register.ANGULAR_VEL_SAMPLE_PERIOD)
     angular_vel_sample_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
     return angular_vel_sample_register
 
 
 # No idea what this returns
 def get_read_register(bus):
-    return list(send_and_wait(bus, Register.READ_REGISTER).data)
+    return list(send_read_and_wait(bus, Register.READ_REGISTER).data)
 
 
 def get_device_addr(bus):
-    msg = send_and_wait(bus, Register.DEVICE_ADDR)
+    msg = send_read_and_wait(bus, Register.DEVICE_ADDR)
     device_address = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
     return device_address
 
 
 def get_version_num_l(bus):
-    return list(send_and_wait(bus, Register.VERSION_NUM_L).data)
+    return list(send_read_and_wait(bus, Register.VERSION_NUM_L).data)
 
 
 def get_version_num_h(bus):
-    return list(send_and_wait(bus, Register.VERSION_NUM_H).data)
+    return list(send_read_and_wait(bus, Register.VERSION_NUM_H).data)
 
 
-def connect_and_wait(register: Register):
+def connect_read_and_wait(register: Register):
     # Built from example at https://python-can.readthedocs.io/en/v4.2.2/listeners.html
     with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
-        return list(send_and_wait(bus, register).data)
+        return list(send_read_and_wait(bus, register).data)
+
+def connect_write_and_wait(register: Register, payload):
+    with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
+        return list(send_write_and_wait(bus, register, payload).data)
 
 
 def print_all_info():
@@ -348,6 +387,80 @@ def print_all_info():
             f"{'version number high register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_version_num_h(bus)))}")
 
 
+def test():
+    with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
+        unlock_msg = can.Message(arbitration_id=DEVICE_ADDR,
+                          data=[0xFF, 0xAA, 0x69, 0x88, 0xB5],
+                          is_extended_id=False)
+
+        # Check that we are currently in clockwise
+        print("Begin settings write test:")
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, must be clockwise")
+
+        print()
+
+        print("Attempting to write without unlocking, should still be clockwise")
+        send_write_and_wait(bus, Register.SPIN_DIR, [0x01, 0x00])
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
+
+        print()
+
+        print("Unlocking and writing counterclockwise, should now be counterclockwise")
+        bus.send(unlock_msg)
+        send_write_and_wait(bus, Register.SPIN_DIR, [0x01, 0x00])
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected counterclockwise")
+
+        print()
+
+        print("Restarting without saving, should now be clockwise")
+        send_write_and_wait(bus, Register.FACTORY_RESET, [0xFF, 0x00])
+        time.sleep(1)
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
+
+        print()
+
+        print("Attempting to write without unlocking again after restart, should still be clockwise")
+        send_write_and_wait(bus, Register.SPIN_DIR, [0x01, 0x00])
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
+
+        print()
+
+        print("Unlocking, writing, saving, and restarting, should now be counterclockwise")
+        bus.send(unlock_msg)
+        send_write_and_wait(bus, Register.SPIN_DIR, [0x01, 0x00])
+        send_write_and_wait(bus, Register.FACTORY_RESET, [0x00, 0x00])
+        send_write_and_wait(bus, Register.FACTORY_RESET, [0xFF, 0x00])
+        time.sleep(1)
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected counterclockwise")
+
+        print()
+
+        print("Attempting to write clockwise without unlocking after restart, should still be counterclockwise")
+        send_write_and_wait(bus, Register.SPIN_DIR, [0x00, 0x00])
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected counterclockwise")
+
+        print()
+
+        print("Unlocking, writing clockwise, and writing counterclockwise without restarting")
+        bus.send(unlock_msg)
+        send_write_and_wait(bus, Register.SPIN_DIR, [0x00, 0x00])
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
+        send_write_and_wait(bus, Register.SPIN_DIR, [0x01, 0x00])
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected counterclockwise")
+
+        print()
+
+        # Write clockwise, save, restart
+        print("Resetting to clockwise and restarting")
+        send_write_and_wait(bus, Register.SPIN_DIR, [0x00, 0x00])
+        send_write_and_wait(bus, Register.FACTORY_RESET, [0x00, 0x00])
+        send_write_and_wait(bus, Register.FACTORY_RESET, [0xFF, 0x00])
+        time.sleep(1)
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
+
+
 if __name__ == "__main__":
-    # print(connect_and_wait(Register.CONTENT_MODE))
-    print_all_info()
+    # print(connect_read_and_wait(Register.CONTENT_MODE))
+    # print_all_info()
+    # print(connect_read_and_wait(Register.SPIN_DIR))
+    test()
