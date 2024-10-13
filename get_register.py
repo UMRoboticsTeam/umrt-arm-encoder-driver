@@ -2,33 +2,351 @@
 This example attempt to retrieve the current angle from the encoder
 """
 
-COM_PORT='COM5'
+COM_PORT = 'COM5'
 
 import can
-import time
+from enum import IntEnum
 
-def send_read_request(bus):
+
+class Register(IntEnum):
+    FACTORY_RESET = 0x00
+    # Allows the encoder to be reset to factory settings
+    # Values:
+    #   0x00: "Save the current configuration" ... not sure what that means
+    #   0x01: Reset to factory settings
+    #   0xFF: "Restart" ... not sure why you would want to do this
+
+    CONTENT_MODE = 0x02
+    # What content (angular info/temp) to automatically publish
+    # Values:
+    #   0x01: Publish the current angle, angular velocity, and number of revolutions
+    #   0x02: Publish the temperature
+    #   0x03: Publish the current angle, angular velocity, number of revolutions, and temperature
+    # Defaults to Publish all = 0x03
+
+    RETURN_RATE = 0x03
+    # What rate the encoder automatically publishes the content at
+    # Values:
+    #   0x00: 0.1 Hz
+    #   0x01: 0.2 Hz
+    #   0x02: 0.5 Hz
+    #   0x03: 1 Hz
+    #   0x04: 2 Hz
+    #   0x05: 5 Hz
+    #   0x06: 10 Hz
+    #   0x07: 20 Hz
+    #   0x08: 50 Hz
+    #   0x09: 100 Hz
+    #   0x0A: 125 Hz
+    #   0x0B: 200 Hz
+    #   0x0C: 1000 Hz
+    #   0x0D: 2000 Hz
+    #   0x0E: Single Return
+    # Defaults to 10 Hz = 0x06
+
+    BAUD_RATE = 0x04
+    # What baud rate to use for the CAN bus
+    # Values:
+    #   0x00: 1000 K
+    #   0x01: 800 K
+    #   0x02: 500 K
+    #   0x03: 400 K
+    #   0x04: 250 K
+    #   0x05: 200 K
+    #   0x06: 125 K
+    #   0x07: 100 K
+    #   0x08: 80 K
+    #   0x09: 50 K
+    #   0x0A: 40 K
+    #   0x0B: 20 K
+    #   0x0C: 10 K
+    #   0x0D: 5 K
+    #   0x0E: 3 K
+    # Defaults to 250 K = 0x04
+
+    ENCODER_MODE = 0x10
+    # Whether the encoder is in single-turn or multi-turn mode
+    # Values:
+    #   0x00: Single turn
+    #   0x01: Multi turn
+    # Defaults to multi-turn = 0x01
+
+    ANG_VAL = 0x11
+    # The current angle of the encoder
+    # Follows the formula: Angle [°] = ANGLE_REG * 360 / 32768
+    # Therefore, to set the current angle to 30°, ANGLE_REG = (30°) * 32768 / 360 = 2730 should be written
+
+    REVOLUTIONS = 0x12
+    # The current number of revolutions which have occurred
+    # Signed 16-bit integer
+
+    ANGULAR_VEL = 0x13
+    # The current angular velocity
+    # Formula: Angular velocity [°/s] = ANGULAR_VEL_REG * 360 / 32768 / (Angular velocity sampling time [s])
+    # Signed 16-bit integer
+
+    TEMPERATURE = 0x14
+    # The current temperature
+    # Follows the formula: Temperature [°C] = TEMPERATURE_REG / 100
+    # 16-bit integer, presumably signed
+
+    SPIN_DIR = 0x15
+    # Whether CW or CCW is considered the positive rotation
+    # Values: TODO: Confirm direction and default
+    #   0x00: Clockwise while viewed from the base is positive
+    #   0x01: Counter-clockwise while viewed from the base is positive
+
+    ANGULAR_VEL_SAMPLE_PERIOD = 0x17
+    # The amount of time to wait between angular velocity samples when internally calculating
+    # The angular velocity is calculated by a running sum, so if the sample rate is too high the register can overflow
+    # Follows the formula: Sample time [s] = SAMPLE_TIME_REG * 100 μs
+    # 16-bit integer, presumably unsigned ("The minimum register value is 1" in manual)
+    # Defaults to 100 ms = 1000
+
+    READ_REGISTER = 0x27
+    # The manual lists this as a register address, but I believe it is actually just a command
+    # TODO: Would be interesting to see what this register contains - I bet it's the next register to respond with
+
+    DEVICE_ADDR = 0x1A
+    # The address this encoder uses on the CAN bus
+    # 11-bit unsigned integer
+    # Defaults to 0x50
+
+    VERSION_NUM_L = 0x2E
+    # Appears to be the low word of the version number
+
+    VERSION_NUM_H = 0x2F
+    # Appears to be the high word of the version number
+
+
+def send_read_request(bus, register: Register):
     # Built from example at https://python-can.readthedocs.io/en/stable/
     msg = can.Message(arbitration_id=0x50,
-                      data=[0x55, 0x55, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff],
+                      data=[0xFF, 0xAA, 0x27, register, 0x00],
                       is_extended_id=False)
 
     try:
         bus.send(msg)
-        print(f"Message sent on {bus.channel_info}")
     except can.CanError:
         print("Error sending CAN message")
 
-def main():
+
+def send_and_wait(bus, register: Register):
+    send_read_request(bus, register)
+
+    try:
+        waiting_for_response = True
+        while waiting_for_response:
+            msg = bus.recv(1)
+            if msg is not None and len(msg.data) == 8:
+                if msg.data[0] == 0x55 and msg.data[1] == 0x5F:
+                    return msg
+
+    except KeyboardInterrupt:
+        pass  # exit normally
+
+
+def get_factory_reset(bus):
+    return list(send_and_wait(bus, Register.FACTORY_RESET).data)
+
+
+def get_content_mode(bus):
+    msg = send_and_wait(bus, Register.FACTORY_RESET)
+    match msg.data[2]:
+        case 0x00:
+            return 'angles'
+        case 0x01:
+            return 'temperature'
+        case 0x02:
+            return 'both'
+    return 'error'
+
+
+def get_return_rate(bus):
+    msg = send_and_wait(bus, Register.RETURN_RATE)
+    match msg.data[2]:
+        case 0x00:
+            return 0.1
+        case 0x01:
+            return 0.2
+        case 0x02:
+            return 0.5
+        case 0x03:
+            return 1
+        case 0x04:
+            return 2
+        case 0x05:
+            return 5
+        case 0x06:
+            return 10
+        case 0x07:
+            return 20
+        case 0x08:
+            return 50
+        case 0x09:
+            return 100
+        case 0x0A:
+            return 125
+        case 0x0B:
+            return 200
+        case 0x0C:
+            return 1000
+        case 0x0D:
+            return 2000
+        case 0x0E:
+            return 'single-return'
+    return 'error'
+
+
+def get_baud_rate(bus):
+    msg = send_and_wait(bus, Register.BAUD_RATE)
+    match msg.data[2]:
+        case 0x00:
+            return 1000
+        case 0x01:
+            return 800
+        case 0x02:
+            return 500
+        case 0x03:
+            return 400
+        case 0x04:
+            return 250
+        case 0x05:
+            return 200
+        case 0x06:
+            return 125
+        case 0x07:
+            return 100
+        case 0x08:
+            return 80
+        case 0x09:
+            return 50
+        case 0x0A:
+            return 40
+        case 0x0B:
+            return 20
+        case 0x0C:
+            return 10
+        case 0x0D:
+            return 5
+        case 0x0E:
+            return 3
+    return 'error'
+
+
+def get_encoder_mode(bus):
+    msg = send_and_wait(bus, Register.ENCODER_MODE)
+    match msg.data[2]:
+        case 0x00:
+            return 'single'
+        case 0x01:
+            return 'multi'
+    return 'error'
+
+
+# Returns the angle register value, to convert to degrees perform get_ang_val(bus) * 360 / 32768
+def get_ang_val(bus):
+    msg = send_and_wait(bus, Register.ANG_VAL)
+    angle_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
+    return angle_register
+
+
+def get_revolutions(bus):
+    msg = send_and_wait(bus, Register.REVOLUTIONS)
+    num_revolutions = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
+    return num_revolutions
+
+
+# Returns the angular velocity register value, to convert to degrees/s perform
+#   get_angular_vel(bus) * 360 / 32768 / get_angular_vel_sample_period(bus) / 10e5
+def get_angular_vel(bus):
+    msg = send_and_wait(bus, Register.ANGULAR_VEL)
+    angular_velocity_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
+    return angular_velocity_register
+
+
+# Returns in centidegrees Celsius, to convert to degrees celsius perform get_temperature(bus) / 100
+def get_temperature(bus):
+    msg = send_and_wait(bus, Register.TEMPERATURE)
+    temperature_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
+    return temperature_register
+
+
+def get_spin_dir(bus):
+    msg = send_and_wait(bus, Register.SPIN_DIR)
+    match msg.data[2]:
+        case 0x00:
+            return 'clockwise'
+        case 0x01:
+            return 'counterclockwise'
+
+
+# Returns in 10^-4 seconds, i.e. hundreds of microseconds
+def get_angular_vel_sample_period(bus):
+    msg = send_and_wait(bus, Register.ANGULAR_VEL_SAMPLE_PERIOD)
+    angular_vel_sample_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
+    return angular_vel_sample_register
+
+
+# No idea what this returns
+def get_read_register(bus):
+    return list(send_and_wait(bus, Register.READ_REGISTER).data)
+
+
+def get_device_addr(bus):
+    msg = send_and_wait(bus, Register.DEVICE_ADDR)
+    device_address = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
+    return device_address
+
+
+def get_version_num_l(bus):
+    return list(send_and_wait(bus, Register.VERSION_NUM_L).data)
+
+
+def get_version_num_h(bus):
+    return list(send_and_wait(bus, Register.VERSION_NUM_H).data)
+
+
+def connect_and_wait(register: Register):
     # Built from example at https://python-can.readthedocs.io/en/v4.2.2/listeners.html
     with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
-        print_listener = can.Printer()
-        can.Notifier(bus, [print_listener])
+        return list(send_and_wait(bus, register).data)
 
-        send_read_request(bus)
 
-        time.sleep(0.5)
+def print_all_info():
+    with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
+        # Padding for each text block
+        padding_0 = 15
+        padding_1 = 31
+        padding_2 = 25
+        padding_3 = 29
+
+        print(f"{'device address:':<{padding_0}} {hex(get_device_addr(bus))}")
+        print(f"{'baud rate:':<{padding_0}} {get_baud_rate(bus)} K")
+        print(f"{'publish rate:':<{padding_0}} {get_return_rate(bus)} Hz")
+        print(f"{'encoder mode:':<{padding_0}} {get_encoder_mode(bus)}-turn")
+        print(f"{'content mode:':<{padding_0}} {get_content_mode(bus)}")
+        print(f"{'spin direction:':<{padding_0}} {get_spin_dir(bus)}")
+        print()
+        angular_vel_sample_period = get_angular_vel_sample_period(bus)
+        print(f"{'angular velocity sample period:':<{padding_1}} {angular_vel_sample_period / 10} ms")
+        print()
+        print(f"{'current angle:':<{padding_2}} {get_ang_val(bus) * 360 / 32768}°")
+        print(
+            f"{'current angular velocity:':<{padding_2}} {get_angular_vel(bus) * 360 / 32768 / angular_vel_sample_period / 10e4}°/s")
+        print(f"{'current revolutions:':<{padding_2}} {get_revolutions(bus)}")
+        print(f"{'current temperature:':<{padding_2}} {get_temperature(bus) / 100} °C")
+        print()
+        print(
+            f"{'read register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_read_register(bus)))}")
+        print(
+            f"{'factory reset register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_factory_reset(bus)))}")
+        print(
+            f"{'version number low register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_version_num_l(bus)))}")
+        print(
+            f"{'version number high register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_version_num_h(bus)))}")
 
 
 if __name__ == "__main__":
-    main()
+    # print(connect_and_wait(Register.DEVICE_ADDR))
+    print_all_info()
