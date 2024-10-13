@@ -374,7 +374,7 @@ def print_all_info():
             f"{'version number high register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_version_num_h(bus)))}")
 
 
-def test():
+def test_write_settings():
     with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
         unlock_msg = can.Message(arbitration_id=DEVICE_ADDR,
                                  data=[0xFF, 0xAA, 0x69, 0x88, 0xB5],
@@ -445,9 +445,11 @@ def test():
         time.sleep(1)
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
 
+        # TODO: Should test factory resetting, feels dangerous though...
+
 
 if __name__ == "__main__":
     # print(connect_read_and_wait(Register.CONTENT_MODE))
     # print_all_info()
     # print(connect_read_and_wait(Register.SPIN_DIR))
-    test()
+    test_write_settings()
