@@ -1,4 +1,3 @@
-
 """
 Shows how to receive messages via polling.
 """
@@ -29,6 +28,7 @@ def dump_all():
         except KeyboardInterrupt:
             pass  # exit normally
 
+
 def dump_delta():
     """Receives all messages and prints the difference from the last to the console until Ctrl+C is pressed."""
 
@@ -55,6 +55,7 @@ def dump_delta():
 
         except KeyboardInterrupt:
             pass  # exit normally
+
 
 def dump_just_angle():
     """Receives all messages and prints the angle portion of each message to the console until Ctrl+C is pressed."""
@@ -89,12 +90,14 @@ def dump_just_angle():
                         # The manual does not state how to calculate the angular velocity register value, but since
                         # the angle register uses 'aa bb', and the number of revolutions uses 'ee ff', the angular
                         # velocity presumably comes from 'cc dd'
-                        angular_velocity_register = int.from_bytes([msg.data[4], msg.data[5]], byteorder='little', signed=True)
+                        angular_velocity_register = int.from_bytes([msg.data[4], msg.data[5]], byteorder='little',
+                                                                   signed=True)
                         angular_velocity = angular_velocity_register * 360 / 32768 / 0.1
 
                         # From translated manual:
                         # Number of revolutions = (0xff << 8) | 0xee
-                        number_of_rotations = int.from_bytes([msg.data[6], msg.data[7]], byteorder='little', signed=True)
+                        number_of_rotations = int.from_bytes([msg.data[6], msg.data[7]], byteorder='little',
+                                                             signed=True)
 
                         print(f"{angle_register:<5} = {angle:<15}°\t\t"
                               f"{angular_velocity_register:<5} = {angular_velocity:.2f} °/s\t\t"
@@ -104,5 +107,34 @@ def dump_just_angle():
             pass  # exit normally
 
 
+def dump_just_temp():
+    """Receives all messages and prints the temperature to the console until Ctrl+C is pressed."""
+
+    # this uses the default configuration (for example from environment variables, or a
+    # config file) see https://python-can.readthedocs.io/en/stable/configuration.html
+    with can.Bus(interface='slcan', channel='COM5', bitrate=250000) as bus:
+        # set to read-only, only supported on some interfaces
+        try:
+            bus.state = BusState.PASSIVE
+        except NotImplementedError:
+            pass
+
+        try:
+            while True:
+                msg = bus.recv(1)
+                if msg is not None and len(msg.data) == 8:
+                    if msg.data[0] == 0x55 and msg.data[1] == 0x56:
+                        # From translated manual:
+                        # Take the encoder reply "55 56 aa bb 00 00 00 00" data as an example to calculate
+                        # Calculation method: Temperature (°C) = (0xbb << 8) | 0xaa / 100
+                        temperature_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
+                        temperature = temperature_register / 100
+
+                        print(f"{temperature} °C")
+
+        except KeyboardInterrupt:
+            pass  # exit normally
+
+
 if __name__ == "__main__":
-    dump_just_angle()
+    dump_just_temp()
