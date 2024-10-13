@@ -172,6 +172,21 @@ def get_apply_settings_register(bus):
     return list(send_read_and_wait(bus, Register.APPLY_SETTINGS).data)
 
 
+# Eligible modes: 'save', 'factory_reset', 'restart'
+def apply_settings(bus, mode, unlock=True):
+    payload = [0x00, 0x00]
+    match mode:
+        case 'save':
+            payload[0] = 0x00
+        case 'factory_reset':
+            payload[0] = 0x01
+        case 'restart':
+            payload[0] = 0xFF
+        case _:
+            raise ValueError('Invalid apply settings mode provided')
+    send_write_request(bus, Register.APPLY_SETTINGS, payload, unlock)
+
+
 def get_content_mode(bus):
     msg = send_read_and_wait(bus, Register.CONTENT_MODE)
     match msg.data[2]:
@@ -182,6 +197,20 @@ def get_content_mode(bus):
         case 0x03:
             return 'both'
     return 'error'
+
+
+def set_content_mode(bus, content_mode, unlock=True):
+    payload = [0x00, 0x00]
+    match content_mode:
+        case 'angles':
+            payload[0] = 0x01
+        case 'temperature':
+            payload[0] = 0x02
+        case 'both':
+            payload[0] = 0x03
+        case _:
+            raise ValueError('Invalid content mode provided')
+    send_write_request(bus, Register.CONTENT_MODE, payload, unlock)
 
 
 def get_return_rate(bus):
@@ -220,6 +249,47 @@ def get_return_rate(bus):
     return 'error'
 
 
+def set_return_rate(bus, return_rate, unlock=True):
+    # Note to anyone who has to maintain these switches, regex is your friend:
+    # Find: "case (0x..):\s*\r\n(\s+)return (.*)$"
+    # Replace: "case $3:\r\n$2payload[0] = $1"
+    payload = [0x00, 0x00]
+    match return_rate:
+        case 0.1:
+            payload[0] = 0x00
+        case 0.2:
+            payload[0] = 0x01
+        case 0.5:
+            payload[0] = 0x02
+        case 1:
+            payload[0] = 0x03
+        case 2:
+            payload[0] = 0x04
+        case 5:
+            payload[0] = 0x05
+        case 10:
+            payload[0] = 0x06
+        case 20:
+            payload[0] = 0x07
+        case 50:
+            payload[0] = 0x08
+        case 100:
+            payload[0] = 0x09
+        case 125:
+            payload[0] = 0x0A
+        case 200:
+            payload[0] = 0x0B
+        case 1000:
+            payload[0] = 0x0C
+        case 2000:
+            payload[0] = 0x0D
+        case 'single-return':
+            payload[0] = 0x0E
+        case _:
+            raise ValueError('Invalid rate provided')
+    send_write_request(bus, Register.RETURN_RATE, payload, unlock)
+
+
 def get_baud_rate(bus):
     msg = send_read_and_wait(bus, Register.BAUD_RATE)
     match msg.data[2]:
@@ -256,6 +326,44 @@ def get_baud_rate(bus):
     return 'error'
 
 
+def set_baud_rate(bus, baud_rate, unlock=True):
+    payload = [0x00, 0x00]
+    match baud_rate:
+        case 1000:
+            payload[0] = 0x00
+        case 800:
+            payload[0] = 0x01
+        case 500:
+            payload[0] = 0x02
+        case 400:
+            payload[0] = 0x03
+        case 250:
+            payload[0] = 0x04
+        case 200:
+            payload[0] = 0x05
+        case 125:
+            payload[0] = 0x06
+        case 100:
+            payload[0] = 0x07
+        case 80:
+            payload[0] = 0x08
+        case 50:
+            payload[0] = 0x09
+        case 40:
+            payload[0] = 0x0A
+        case 20:
+            payload[0] = 0x0B
+        case 10:
+            payload[0] = 0x0C
+        case 5:
+            payload[0] = 0x0D
+        case 3:
+            payload[0] = 0x0E
+        case _:
+            raise ValueError('Invalid baud rate provided')
+    send_write_request(bus, Register.BAUD_RATE, payload, unlock)
+
+
 def get_encoder_mode(bus):
     msg = send_read_and_wait(bus, Register.ENCODER_MODE)
     match msg.data[2]:
@@ -266,6 +374,18 @@ def get_encoder_mode(bus):
     return 'error'
 
 
+def set_encoder_mode(bus, mode, unlock=True):
+    payload = [0x00, 0x00]
+    match mode:
+        case 'single':
+            payload[0] = 0x00
+        case 'multi':
+            payload[0] = 0x01
+        case _:
+            raise ValueError('Invalid encoder mode provided')
+    send_write_request(bus, Register.ENCODER_MODE, payload, unlock)
+
+
 # Returns the angle register value, to convert to degrees perform get_ang_val(bus) * 360 / 32768
 def get_ang_val(bus):
     msg = send_read_and_wait(bus, Register.ANG_VAL)
@@ -273,10 +393,22 @@ def get_ang_val(bus):
     return angle_register
 
 
+def set_ang_val(bus, angle_register_value, unlock=True):
+    if angle_register_value < 0 or angle_register_value >= 2e15: raise ValueError('Invalid angle value provided')
+    payload = int.to_bytes(angle_register_value, 2, byteorder='little', signed=False)
+    send_write_request(bus, Register.ANG_VAL, payload, unlock)
+
+
 def get_revolutions(bus):
     msg = send_read_and_wait(bus, Register.REVOLUTIONS)
     num_revolutions = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
     return num_revolutions
+
+
+def set_revolutions(bus, revolutions, unlock=True):
+    if revolutions < -2e15 or revolutions >= 2e15: raise ValueError('Invalid number of revolutions provided')
+    payload = int.to_bytes(revolutions, 2, byteorder='little', signed=True)
+    send_write_request(bus, Register.REVOLUTIONS, payload, unlock)
 
 
 # Returns the angular velocity register value, to convert to degrees/s perform
@@ -287,11 +419,17 @@ def get_angular_vel(bus):
     return angular_velocity_register
 
 
+# Angular velocity is not eligible to be set
+
+
 # Returns in centidegrees Celsius, to convert to degrees celsius perform get_temperature(bus) / 100
 def get_temperature(bus):
     msg = send_read_and_wait(bus, Register.TEMPERATURE)
     temperature_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
     return temperature_register
+
+
+# Temperature is not eligible to be set
 
 
 def get_spin_dir(bus):
@@ -303,6 +441,18 @@ def get_spin_dir(bus):
             return 'counterclockwise'
 
 
+def set_spin_dir(bus, direction, unlock=True):
+    payload = [0x00, 0x00]
+    match direction:
+        case 'clockwise':
+            payload[0] = 0x00
+        case 'counterclockwise':
+            payload[0] = 0x01
+        case _:
+            raise ValueError('Invalid spin direction provided')
+    send_write_request(bus, Register.SPIN_DIR, payload, unlock)
+
+
 # Returns in 10^-4 seconds, i.e. hundreds of microseconds
 def get_angular_vel_sample_period(bus):
     msg = send_read_and_wait(bus, Register.ANGULAR_VEL_SAMPLE_PERIOD)
@@ -310,9 +460,18 @@ def get_angular_vel_sample_period(bus):
     return angular_vel_sample_register
 
 
+def set_angular_vel_sample_period(bus, sample_period, unlock=True):
+    if sample_period < 1 or sample_period >= 2e16: raise ValueError('Invalid sample period provided')
+    payload = int.to_bytes(sample_period, 2, byteorder='little', signed=True)
+    send_write_request(bus, Register.ANGULAR_VEL_SAMPLE_PERIOD, payload, unlock)
+
+
 # No idea what this returns
 def get_read_register(bus):
     return list(send_read_and_wait(bus, Register.READ_REGISTER).data)
+
+
+# Not confident in what READ_REGISTER does, so not allowing writing
 
 
 def get_device_addr(bus):
@@ -321,12 +480,21 @@ def get_device_addr(bus):
     return device_address
 
 
+def set_device_addr(bus, address, unlock=True):
+    if address < 0 or address >= 2e11: raise ValueError('Invalid CAN address provided')
+    payload = int.to_bytes(address, 2, byteorder='little', signed=False)
+    send_write_request(bus, Register.DEVICE_ADDR, payload, unlock)
+
+
 def get_version_num_l(bus):
     return list(send_read_and_wait(bus, Register.VERSION_NUM_L).data)
 
 
 def get_version_num_h(bus):
     return list(send_read_and_wait(bus, Register.VERSION_NUM_H).data)
+
+
+# Version number is not eligible to be set
 
 
 def connect_read_and_wait(register: Register):
