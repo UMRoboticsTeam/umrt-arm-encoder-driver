@@ -167,21 +167,6 @@ def send_read_and_wait(bus, register: Register):
         pass  # exit normally
 
 
-def send_write_and_wait(bus, register: Register, payload):
-    send_write_request(bus, register, payload)
-    return can.message.Message()
-    try:
-        waiting_for_response = True
-        while waiting_for_response:
-            msg = bus.recv(1)
-            if msg is not None and len(msg.data) == 8:
-                if msg.data[0] == 0x55 and (msg.data[1] != 0x55 and msg.data[1] != 0x56) or msg.data[0] != 0x55:
-                    print(msg)
-
-    except KeyboardInterrupt:
-        pass  # exit normally
-
-
 def get_factory_reset(bus):
     return list(send_read_and_wait(bus, Register.FACTORY_RESET).data)
 
@@ -348,9 +333,9 @@ def connect_read_and_wait(register: Register):
     with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
         return list(send_read_and_wait(bus, register).data)
 
-def connect_write_and_wait(register: Register, payload):
+def connect_and_write(register: Register, payload):
     with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
-        return list(send_write_and_wait(bus, register, payload).data)
+        send_write_request(bus, register, payload)
 
 
 def print_all_info():
@@ -400,61 +385,61 @@ def test():
         print()
 
         print("Attempting to write without unlocking, should still be clockwise")
-        send_write_and_wait(bus, Register.SPIN_DIR, [0x01, 0x00])
+        send_write_request(bus, Register.SPIN_DIR, [0x01, 0x00])
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
 
         print()
 
         print("Unlocking and writing counterclockwise, should now be counterclockwise")
         bus.send(unlock_msg)
-        send_write_and_wait(bus, Register.SPIN_DIR, [0x01, 0x00])
+        send_write_request(bus, Register.SPIN_DIR, [0x01, 0x00])
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected counterclockwise")
 
         print()
 
         print("Restarting without saving, should now be clockwise")
-        send_write_and_wait(bus, Register.FACTORY_RESET, [0xFF, 0x00])
+        send_write_request(bus, Register.FACTORY_RESET, [0xFF, 0x00])
         time.sleep(1)
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
 
         print()
 
         print("Attempting to write without unlocking again after restart, should still be clockwise")
-        send_write_and_wait(bus, Register.SPIN_DIR, [0x01, 0x00])
+        send_write_request(bus, Register.SPIN_DIR, [0x01, 0x00])
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
 
         print()
 
         print("Unlocking, writing, saving, and restarting, should now be counterclockwise")
         bus.send(unlock_msg)
-        send_write_and_wait(bus, Register.SPIN_DIR, [0x01, 0x00])
-        send_write_and_wait(bus, Register.FACTORY_RESET, [0x00, 0x00])
-        send_write_and_wait(bus, Register.FACTORY_RESET, [0xFF, 0x00])
+        send_write_request(bus, Register.SPIN_DIR, [0x01, 0x00])
+        send_write_request(bus, Register.FACTORY_RESET, [0x00, 0x00])
+        send_write_request(bus, Register.FACTORY_RESET, [0xFF, 0x00])
         time.sleep(1)
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected counterclockwise")
 
         print()
 
         print("Attempting to write clockwise without unlocking after restart, should still be counterclockwise")
-        send_write_and_wait(bus, Register.SPIN_DIR, [0x00, 0x00])
+        send_write_request(bus, Register.SPIN_DIR, [0x00, 0x00])
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected counterclockwise")
 
         print()
 
         print("Unlocking, writing clockwise, and writing counterclockwise without restarting")
         bus.send(unlock_msg)
-        send_write_and_wait(bus, Register.SPIN_DIR, [0x00, 0x00])
+        send_write_request(bus, Register.SPIN_DIR, [0x00, 0x00])
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
-        send_write_and_wait(bus, Register.SPIN_DIR, [0x01, 0x00])
+        send_write_request(bus, Register.SPIN_DIR, [0x01, 0x00])
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected counterclockwise")
 
         print()
 
         # Write clockwise, save, restart
         print("Resetting to clockwise and restarting")
-        send_write_and_wait(bus, Register.SPIN_DIR, [0x00, 0x00])
-        send_write_and_wait(bus, Register.FACTORY_RESET, [0x00, 0x00])
-        send_write_and_wait(bus, Register.FACTORY_RESET, [0xFF, 0x00])
+        send_write_request(bus, Register.SPIN_DIR, [0x00, 0x00])
+        send_write_request(bus, Register.FACTORY_RESET, [0x00, 0x00])
+        send_write_request(bus, Register.FACTORY_RESET, [0xFF, 0x00])
         time.sleep(1)
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
 
