@@ -3,10 +3,10 @@ This example attempt to retrieve the current angle from the encoder
 """
 
 COM_PORT = 'COM5'
+DEVICE_ADDR = 0x50
 
 import can
 from enum import IntEnum
-
 
 class Register(IntEnum):
     FACTORY_RESET = 0x00
@@ -121,7 +121,7 @@ class Register(IntEnum):
 
 def send_read_request(bus, register: Register):
     # Built from example at https://python-can.readthedocs.io/en/stable/
-    msg = can.Message(arbitration_id=0x50,
+    msg = can.Message(arbitration_id=DEVICE_ADDR,
                       data=[0xFF, 0xAA, 0x27, register, 0x00],
                       is_extended_id=False)
 
@@ -151,13 +151,13 @@ def get_factory_reset(bus):
 
 
 def get_content_mode(bus):
-    msg = send_and_wait(bus, Register.FACTORY_RESET)
+    msg = send_and_wait(bus, Register.CONTENT_MODE)
     match msg.data[2]:
-        case 0x00:
-            return 'angles'
         case 0x01:
-            return 'temperature'
+            return 'angles'
         case 0x02:
+            return 'temperature'
+        case 0x03:
             return 'both'
     return 'error'
 
@@ -348,5 +348,5 @@ def print_all_info():
 
 
 if __name__ == "__main__":
-    # print(connect_and_wait(Register.DEVICE_ADDR))
+    #print(connect_and_wait(Register.CONTENT_MODE))
     print_all_info()
