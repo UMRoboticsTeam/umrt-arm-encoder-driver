@@ -8,6 +8,7 @@ DEVICE_ADDR = 0x50
 import can
 from enum import IntEnum
 
+
 class Register(IntEnum):
     FACTORY_RESET = 0x00
     # Allows the encoder to be reset to factory settings
@@ -22,7 +23,7 @@ class Register(IntEnum):
     #   0x01: Publish the current angle, angular velocity, and number of revolutions
     #   0x02: Publish the temperature
     #   0x03: Publish the current angle, angular velocity, number of revolutions, and temperature
-    # Defaults to Publish all = 0x03
+    # Defaults to publish both = 0x03
 
     RETURN_RATE = 0x03
     # What rate the encoder automatically publishes the content at
@@ -92,9 +93,10 @@ class Register(IntEnum):
 
     SPIN_DIR = 0x15
     # Whether CW or CCW is considered the positive rotation
-    # Values: TODO: Confirm direction and default
-    #   0x00: Clockwise while viewed from the base is positive
-    #   0x01: Counter-clockwise while viewed from the base is positive
+    # Values:
+    #   0x00: Clockwise when viewed from the base is positive
+    #   0x01: Counterclockwise when viewed from the base is positive
+    # Defaults to clockwise = 0x00
 
     ANGULAR_VEL_SAMPLE_PERIOD = 0x17
     # The amount of time to wait between angular velocity samples when internally calculating
@@ -105,7 +107,6 @@ class Register(IntEnum):
 
     READ_REGISTER = 0x27
     # The manual lists this as a register address, but I believe it is actually just a command
-    # TODO: Would be interesting to see what this register contains - I bet it's the next register to respond with
 
     DEVICE_ADDR = 0x1A
     # The address this encoder uses on the CAN bus
@@ -348,5 +349,5 @@ def print_all_info():
 
 
 if __name__ == "__main__":
-    #print(connect_and_wait(Register.CONTENT_MODE))
+    # print(connect_and_wait(Register.CONTENT_MODE))
     print_all_info()
