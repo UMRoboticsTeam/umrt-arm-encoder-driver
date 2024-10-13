@@ -11,12 +11,13 @@ from enum import IntEnum
 
 
 class Register(IntEnum):
-    FACTORY_RESET = 0x00
-    # Allows the encoder to be reset to factory settings
+    APPLY_SETTINGS = 0x00
+    # Allows the encoder settings to be persisted
     # Values:
-    #   0x00: "Save the current configuration" ... not sure what that means
+    #   0x00: Save the current settings
     #   0x01: Reset to factory settings
-    #   0xFF: "Restart" ... not sure why you would want to do this
+    #   0xFF: Restart the encoder
+    # Restarting is useful because it allows you to exit unlocked mode and apply saved settings
 
     CONTENT_MODE = 0x02
     # What content (angular info/temp) to automatically publish
@@ -167,8 +168,8 @@ def send_read_and_wait(bus, register: Register):
         pass  # exit normally
 
 
-def get_factory_reset(bus):
-    return list(send_read_and_wait(bus, Register.FACTORY_RESET).data)
+def get_apply_settings_register(bus):
+    return list(send_read_and_wait(bus, Register.APPLY_SETTINGS).data)
 
 
 def get_content_mode(bus):
@@ -366,7 +367,7 @@ def print_all_info():
         print(
             f"{'read register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_read_register(bus)))}")
         print(
-            f"{'factory reset register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_factory_reset(bus)))}")
+            f"{'apply settings register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_apply_settings_register(bus)))}")
         print(
             f"{'version number low register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_version_num_l(bus)))}")
         print(
@@ -399,7 +400,7 @@ def test():
         print()
 
         print("Restarting without saving, should now be clockwise")
-        send_write_request(bus, Register.FACTORY_RESET, [0xFF, 0x00], unlock=False)
+        send_write_request(bus, Register.APPLY_SETTINGS, [0xFF, 0x00], unlock=False)
         time.sleep(1)
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
 
@@ -415,8 +416,8 @@ def test():
         bus.send(unlock_msg)
         bus.send(unlock_msg)
         send_write_request(bus, Register.SPIN_DIR, [0x01, 0x00], unlock=False)
-        send_write_request(bus, Register.FACTORY_RESET, [0x00, 0x00], unlock=False)
-        send_write_request(bus, Register.FACTORY_RESET, [0xFF, 0x00], unlock=False)
+        send_write_request(bus, Register.APPLY_SETTINGS, [0x00, 0x00], unlock=False)
+        send_write_request(bus, Register.APPLY_SETTINGS, [0xFF, 0x00], unlock=False)
         time.sleep(1)
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected counterclockwise")
 
@@ -439,8 +440,8 @@ def test():
 
         print("Resetting to clockwise and restarting")
         send_write_request(bus, Register.SPIN_DIR, [0x00, 0x00], unlock=False)
-        send_write_request(bus, Register.FACTORY_RESET, [0x00, 0x00], unlock=False)
-        send_write_request(bus, Register.FACTORY_RESET, [0xFF, 0x00], unlock=False)
+        send_write_request(bus, Register.APPLY_SETTINGS, [0x00, 0x00], unlock=False)
+        send_write_request(bus, Register.APPLY_SETTINGS, [0xFF, 0x00], unlock=False)
         time.sleep(1)
         print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected clockwise")
 
