@@ -1,6 +1,7 @@
 """
 This example attempt to retrieve the current angle from the encoder
 """
+import string
 
 COM_PORT = 'COM5'
 DEVICE_ADDR = 0x50
@@ -193,15 +194,17 @@ def apply_settings(bus, mode, unlock=True):
 
 
 def get_content_mode(bus):
+    content_mode = None
     msg = send_read_and_wait(bus, Register.CONTENT_MODE)
-    match msg.data[2]:
-        case 0x01:
-            return 'angles'
-        case 0x02:
-            return 'temperature'
-        case 0x03:
-            return 'both'
-    return 'error'
+    if msg is not None:
+        match msg.data[2]:
+            case 0x01:
+                content_mode = 'angles'
+            case 0x02:
+                content_mode = 'temperature'
+            case 0x03:
+                content_mode = 'both'
+    return content_mode
 
 
 def set_content_mode(bus, content_mode, unlock=True):
@@ -219,39 +222,41 @@ def set_content_mode(bus, content_mode, unlock=True):
 
 
 def get_return_rate(bus):
+    return_rate = None
     msg = send_read_and_wait(bus, Register.RETURN_RATE)
-    match msg.data[2]:
-        case 0x00:
-            return 0.1
-        case 0x01:
-            return 0.2
-        case 0x02:
-            return 0.5
-        case 0x03:
-            return 1
-        case 0x04:
-            return 2
-        case 0x05:
-            return 5
-        case 0x06:
-            return 10
-        case 0x07:
-            return 20
-        case 0x08:
-            return 50
-        case 0x09:
-            return 100
-        case 0x0A:
-            return 125
-        case 0x0B:
-            return 200
-        case 0x0C:
-            return 1000
-        case 0x0D:
-            return 2000
-        case 0x0E:
-            return 'single_return'
-    return 'error'
+    if msg is not None:
+        match msg.data[2]:
+            case 0x00:
+                return_rate = 0.1
+            case 0x01:
+                return_rate = 0.2
+            case 0x02:
+                return_rate = 0.5
+            case 0x03:
+                return_rate = 1
+            case 0x04:
+                return_rate = 2
+            case 0x05:
+                return_rate = 5
+            case 0x06:
+                return_rate = 10
+            case 0x07:
+                return_rate = 20
+            case 0x08:
+                return_rate = 50
+            case 0x09:
+                return_rate = 100
+            case 0x0A:
+                return_rate = 125
+            case 0x0B:
+                return_rate = 200
+            case 0x0C:
+                return_rate = 1000
+            case 0x0D:
+                return_rate = 2000
+            case 0x0E:
+                return_rate = 'single_return'
+    return return_rate
 
 
 def set_return_rate(bus, return_rate, unlock=True):
@@ -296,39 +301,41 @@ def set_return_rate(bus, return_rate, unlock=True):
 
 
 def get_baud_rate(bus):
+    baud_rate = None
     msg = send_read_and_wait(bus, Register.BAUD_RATE)
-    match msg.data[2]:
-        case 0x00:
-            return 1000
-        case 0x01:
-            return 800
-        case 0x02:
-            return 500
-        case 0x03:
-            return 400
-        case 0x04:
-            return 250
-        case 0x05:
-            return 200
-        case 0x06:
-            return 125
-        case 0x07:
-            return 100
-        case 0x08:
-            return 80
-        case 0x09:
-            return 50
-        case 0x0A:
-            return 40
-        case 0x0B:
-            return 20
-        case 0x0C:
-            return 10
-        case 0x0D:
-            return 5
-        case 0x0E:
-            return 3
-    return 'error'
+    if msg is not None:
+        match msg.data[2]:
+            case 0x00:
+                baud_rate = 1000
+            case 0x01:
+                baud_rate = 800
+            case 0x02:
+                baud_rate = 500
+            case 0x03:
+                baud_rate = 400
+            case 0x04:
+                baud_rate = 250
+            case 0x05:
+                baud_rate = 200
+            case 0x06:
+                baud_rate = 125
+            case 0x07:
+                baud_rate = 100
+            case 0x08:
+                baud_rate = 80
+            case 0x09:
+                baud_rate = 50
+            case 0x0A:
+                baud_rate = 40
+            case 0x0B:
+                baud_rate = 20
+            case 0x0C:
+                baud_rate = 10
+            case 0x0D:
+                baud_rate = 5
+            case 0x0E:
+                baud_rate = 3
+    return baud_rate
 
 
 def set_baud_rate(bus, baud_rate, unlock=True):
@@ -370,13 +377,15 @@ def set_baud_rate(bus, baud_rate, unlock=True):
 
 
 def get_encoder_mode(bus):
+    encoder_mode = None
     msg = send_read_and_wait(bus, Register.ENCODER_MODE)
-    match msg.data[2]:
-        case 0x00:
-            return 'single'
-        case 0x01:
-            return 'multi'
-    return 'error'
+    if msg is not None:
+        match msg.data[2]:
+            case 0x00:
+                baud_rate = 'single'
+            case 0x01:
+                baud_rate = 'multi'
+    return encoder_mode
 
 
 def set_encoder_mode(bus, mode, unlock=True):
@@ -446,13 +455,15 @@ def get_temperature(bus):
 
 
 def get_spin_dir(bus):
+    spin_dir = None
     msg = send_read_and_wait(bus, Register.SPIN_DIR)
-    match msg.data[2]:
-        case 0x00:
-            return 'clockwise'
-        case 0x01:
-            return 'counterclockwise'
-    return 'error'
+    if msg is not None:
+        match msg.data[2]:
+            case 0x00:
+                spin_dir = 'clockwise'
+            case 0x01:
+                spin_dir = 'counterclockwise'
+    return spin_dir
 
 
 def set_spin_dir(bus, direction, unlock=True):
