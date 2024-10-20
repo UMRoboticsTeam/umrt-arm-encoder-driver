@@ -630,12 +630,12 @@ def test_write_settings():
 def test():
     global DEVICE_ADDR
 
-    DEVICE_ADDR = 0x51
+    DEVICE_ADDR = 0x50
     with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
         print(get_device_addr(bus))
         set_device_addr(bus, 0x51)
+        print(get_device_addr(bus)) # TODO: NOT ALLOWED TO DO THIS!!!! The device ID changes immediately, this will block forever since the device won't receive the read command
         apply_settings(bus, 'save', False)
-        print(get_apply_settings_register(bus))
         apply_settings(bus, 'restart', False)
     time.sleep(1)
 
@@ -648,7 +648,9 @@ def test():
     with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
         print(get_device_addr(bus))
         #apply_settings(bus, 'save', True)
+        get_apply_settings_register(bus)
         apply_settings(bus, 'restart', True)
+        get_apply_settings_register(bus)
         time.sleep(1)
         print(get_device_addr(bus))
         time.sleep(1)
