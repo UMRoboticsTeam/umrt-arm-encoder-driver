@@ -740,7 +740,6 @@ def test():
         time.sleep(1)
         print(get_device_addr(bus))
         time.sleep(1)
-    # TODO: Tracking down why the second restart resets the device's address to 0x50
     # test_write_settings()
 
 
