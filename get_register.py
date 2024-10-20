@@ -553,6 +553,10 @@ def connect_and_write(register: Register, payload):
         send_write_request(bus, register, payload)
 
 
+def format(formatter, *msgs, ):
+    return formatter.format(*msgs) if msgs is not None and None not in msgs else 'error'
+
+
 def print_all_info():
     with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
         # Padding for each text block
@@ -561,30 +565,30 @@ def print_all_info():
         padding_2 = 25
         padding_3 = 29
 
-        print(f"{'device address:':<{padding_0}} {hex(get_device_addr(bus))}")
-        print(f"{'baud rate:':<{padding_0}} {get_baud_rate(bus)} K")
-        print(f"{'publish rate:':<{padding_0}} {get_return_rate(bus)} Hz")
-        print(f"{'encoder mode:':<{padding_0}} {get_encoder_mode(bus)}-turn")
+        print(f"{'device address:':<{padding_0}} {format("{hex({0})}", get_device_addr(bus))}")
+        print(f"{'baud rate:':<{padding_0}} {format("{0} K", get_baud_rate(bus))}")
+        print(f"{'publish rate:':<{padding_0}} {format("{0} Hz", get_return_rate(bus))}")
+        print(f"{'encoder mode:':<{padding_0}} {format("{0}-turn", get_encoder_mode(bus))}")
         print(f"{'content mode:':<{padding_0}} {get_content_mode(bus)}")
         print(f"{'spin direction:':<{padding_0}} {get_spin_dir(bus)}")
         print()
         angular_vel_sample_period = get_angular_vel_sample_period(bus)
-        print(f"{'angular velocity sample period:':<{padding_1}} {angular_vel_sample_period / 10} ms")
+        print(f"{'angular velocity sample period:':<{padding_1}} {format("{{0} / 10} ms", angular_vel_sample_period)}")
         print()
-        print(f"{'current angle:':<{padding_2}} {get_ang_val(bus) * 360 / 32768}°")
+        print(f"{'current angle:':<{padding_2}} {format("{{0} * 360 / 32768}°", get_ang_val(bus))}")
         print(
-            f"{'current angular velocity:':<{padding_2}} {get_angular_vel(bus) * 360 / 32768 / angular_vel_sample_period / 10e4}°/s")
+            f"{'current angular velocity:':<{padding_2}} {format("{{0} * 360 / 32768 / {1} / 10e4}°/s", get_angular_vel(bus), angular_vel_sample_period)}")
         print(f"{'current revolutions:':<{padding_2}} {get_revolutions(bus)}")
-        print(f"{'current temperature:':<{padding_2}} {get_temperature(bus) / 100} °C")
+        print(f"{'current temperature:':<{padding_2}} {format("{{0} / 100}°C", get_temperature(bus))}")
         print()
         print(
-            f"{'read register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_read_register(bus)))}")
+            f"{'read register:':<{padding_3}} {format("{'[{}]'.format(', '.join(f'0x{x:02x}' for x in {0}))}", get_read_register(bus))}")
         print(
-            f"{'apply settings register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_apply_settings_register(bus)))}")
+            f"{'apply settings register:':<{padding_3}} {format("{'[{}]'.format(', '.join(f'0x{x:02x}' for x in {0}))}", get_apply_settings_register(bus))}")
         print(
-            f"{'version number low register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_version_num_l(bus)))}")
+            f"{'version number low register:':<{padding_3}} {format("{'[{}]'.format(', '.join(f'0x{x:02x}' for x in {0}))}", get_version_num_l(bus))}")
         print(
-            f"{'version number high register:':<{padding_3}} {'[{}]'.format(', '.join(f'0x{x:02x}' for x in get_version_num_h(bus)))}")
+            f"{'version number high register:':<{padding_3}} {format("{'[{}]'.format(', '.join(f'0x{x:02x}' for x in {0}))}", get_version_num_h(bus))}")
 
 
 def test_write_settings():
