@@ -635,13 +635,20 @@ def test():
         print(get_device_addr(bus))
         set_device_addr(bus, 0x51)
         apply_settings(bus, 'save', False)
+        print(get_apply_settings_register(bus))
         apply_settings(bus, 'restart', False)
     time.sleep(1)
 
     DEVICE_ADDR = 0x51
+    print_all_info()
+    print()
+    time.sleep(10)
+    print_all_info()
+    print()
     with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
         print(get_device_addr(bus))
-        send_write_request(bus, Register.APPLY_SETTINGS, [0xFF, 0x00], unlock=True)
+        #apply_settings(bus, 'save', True)
+        apply_settings(bus, 'restart', True)
         time.sleep(1)
         print(get_device_addr(bus))
         time.sleep(1)
