@@ -627,9 +627,29 @@ def test_write_settings():
 
         # TODO: Should test factory resetting, feels dangerous though...
 
+def test():
+    global DEVICE_ADDR
+
+    DEVICE_ADDR = 0x51
+    with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
+        print(get_device_addr(bus))
+        set_device_addr(bus, 0x51)
+        apply_settings(bus, 'save', False)
+        apply_settings(bus, 'restart', False)
+    time.sleep(1)
+
+    DEVICE_ADDR = 0x51
+    with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
+        print(get_device_addr(bus))
+        send_write_request(bus, Register.APPLY_SETTINGS, [0xFF, 0x00], unlock=True)
+        time.sleep(1)
+        print(get_device_addr(bus))
+        time.sleep(1)
+    # TODO: Tracking down why the second restart resets the device's address to 0x50
+    #test_write_settings()
 
 if __name__ == "__main__":
     # print(connect_read_and_wait(Register.CONTENT_MODE))
     # print_all_info()
-    # print(connect_read_and_wait(Register.SPIN_DIR))
-    test_write_settings()
+    # # print(connect_read_and_wait(Register.SPIN_DIR))
+    test()
