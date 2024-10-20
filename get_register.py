@@ -153,23 +153,28 @@ def send_write_request(bus, register: Register, payload, unlock=True):
         print("Error sending CAN message")
 
 
-def send_read_and_wait(bus, register: Register):
+def send_read_and_wait(bus, register: Register, timeout=1, retries=0):
     send_read_request(bus, register)
 
-    try:
-        waiting_for_response = True
-        while waiting_for_response:
-            msg = bus.recv(1)
-            if msg is not None and len(msg.data) == 8:
-                if msg.data[0] == 0x55 and msg.data[1] == 0x5F:
-                    return msg
-
-    except KeyboardInterrupt:
-        pass  # exit normally
+    for _ in range(retries + 1):
+        try:
+            abort_time = time.time() + timeout
+            while time.time() < abort_time:
+                msg = bus.recv(1)
+                if msg is not None and len(msg.data) == 8:
+                    if msg.data[0] == 0x55 and msg.data[1] == 0x5F:
+                        return msg
+        except KeyboardInterrupt:
+            return None
+    return None
 
 
 def get_apply_settings_register(bus):
-    return list(send_read_and_wait(bus, Register.APPLY_SETTINGS).data)
+    settings_register = None
+    msg = send_read_and_wait(bus, Register.APPLY_SETTINGS)
+    if msg is not None:
+        settings_register = list(msg.data)
+    return settings_register
 
 
 # Eligible modes: 'save', 'factory_reset', 'restart'
@@ -388,8 +393,10 @@ def set_encoder_mode(bus, mode, unlock=True):
 
 # Returns the angle register value, to convert to degrees perform get_ang_val(bus) * 360 / 32768
 def get_ang_val(bus):
+    angle_register = None
     msg = send_read_and_wait(bus, Register.ANG_VAL)
-    angle_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
+    if msg is not None:
+        angle_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
     return angle_register
 
 
@@ -400,8 +407,10 @@ def set_ang_val(bus, angle_register_value, unlock=True):
 
 
 def get_revolutions(bus):
+    num_revolutions = None
     msg = send_read_and_wait(bus, Register.REVOLUTIONS)
-    num_revolutions = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
+    if msg is not None:
+        num_revolutions = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
     return num_revolutions
 
 
@@ -414,8 +423,10 @@ def set_revolutions(bus, revolutions, unlock=True):
 # Returns the angular velocity register value, to convert to degrees/s perform
 #   get_angular_vel(bus) * 360 / 32768 / get_angular_vel_sample_period(bus) / 10e5
 def get_angular_vel(bus):
+    angular_velocity_register = None
     msg = send_read_and_wait(bus, Register.ANGULAR_VEL)
-    angular_velocity_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
+    if msg is not None:
+        angular_velocity_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
     return angular_velocity_register
 
 
@@ -424,8 +435,10 @@ def get_angular_vel(bus):
 
 # Returns in centidegrees Celsius, to convert to degrees celsius perform get_temperature(bus) / 100
 def get_temperature(bus):
+    temperature_register = None
     msg = send_read_and_wait(bus, Register.TEMPERATURE)
-    temperature_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
+    if msg is not None:
+        temperature_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=True)
     return temperature_register
 
 
@@ -439,6 +452,7 @@ def get_spin_dir(bus):
             return 'clockwise'
         case 0x01:
             return 'counterclockwise'
+    return 'error'
 
 
 def set_spin_dir(bus, direction, unlock=True):
@@ -455,8 +469,10 @@ def set_spin_dir(bus, direction, unlock=True):
 
 # Returns in 10^-4 seconds, i.e. hundreds of microseconds
 def get_angular_vel_sample_period(bus):
+    angular_vel_sample_register = None
     msg = send_read_and_wait(bus, Register.ANGULAR_VEL_SAMPLE_PERIOD)
-    angular_vel_sample_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
+    if msg is not None:
+        angular_vel_sample_register = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
     return angular_vel_sample_register
 
 
@@ -468,15 +484,21 @@ def set_angular_vel_sample_period(bus, sample_period, unlock=True):
 
 # No idea what this returns
 def get_read_register(bus):
-    return list(send_read_and_wait(bus, Register.READ_REGISTER).data)
+    read_register = None
+    msg = send_read_and_wait(bus, Register.READ_REGISTER)
+    if msg is not None:
+        read_register = list(msg.data)
+    return read_register
 
 
 # Not confident in what READ_REGISTER does, so not allowing writing
 
 
 def get_device_addr(bus):
+    device_address = None
     msg = send_read_and_wait(bus, Register.DEVICE_ADDR)
-    device_address = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
+    if msg is not None:
+        device_address = int.from_bytes([msg.data[2], msg.data[3]], byteorder='little', signed=False)
     return device_address
 
 
@@ -487,20 +509,32 @@ def set_device_addr(bus, address, unlock=True):
 
 
 def get_version_num_l(bus):
-    return list(send_read_and_wait(bus, Register.VERSION_NUM_L).data)
+    version_num_l = None
+    msg = send_read_and_wait(bus, Register.VERSION_NUM_L)
+    if msg is not None:
+        version_num_l = list(msg.data)
+    return version_num_l
 
 
 def get_version_num_h(bus):
-    return list(send_read_and_wait(bus, Register.VERSION_NUM_H).data)
+    version_num_h = None
+    msg = send_read_and_wait(bus, Register.VERSION_NUM_H)
+    if msg is not None:
+        version_num_h = list(msg.data)
+    return version_num_h
 
 
 # Version number is not eligible to be set
 
 
-def connect_read_and_wait(register: Register):
+def connect_read_and_wait(register: Register, timeout=1, retries=0):
     # Built from example at https://python-can.readthedocs.io/en/v4.2.2/listeners.html
     with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
-        return list(send_read_and_wait(bus, register).data)
+        response = None
+        msg = send_read_and_wait(bus, register, timeout, retries)
+        if msg is not None:
+            response = list(msg.data)
+        return response
 
 
 def connect_and_write(register: Register, payload):
@@ -627,6 +661,7 @@ def test_write_settings():
 
         # TODO: Should test factory resetting, feels dangerous though...
 
+
 def test():
     global DEVICE_ADDR
 
@@ -647,7 +682,7 @@ def test():
     print()
     with can.Bus(interface='slcan', channel=COM_PORT, bitrate=250000) as bus:
         print(get_device_addr(bus))
-        #apply_settings(bus, 'save', True)
+        # apply_settings(bus, 'save', True)
         get_apply_settings_register(bus)
         apply_settings(bus, 'restart', True)
         get_apply_settings_register(bus)
@@ -655,7 +690,8 @@ def test():
         print(get_device_addr(bus))
         time.sleep(1)
     # TODO: Tracking down why the second restart resets the device's address to 0x50
-    #test_write_settings()
+    # test_write_settings()
+
 
 if __name__ == "__main__":
     # print(connect_read_and_wait(Register.CONTENT_MODE))
