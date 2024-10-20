@@ -606,7 +606,19 @@ def test_write_settings():
 
         print()
 
-        print("Resetting to clockwise and restarting")
+        print("Saving counterclockwise, and restarting twice")
+        send_write_request(bus, Register.APPLY_SETTINGS, [0x00, 0x00], unlock=False)
+        send_write_request(bus, Register.APPLY_SETTINGS, [0xFF, 0x00], unlock=False)
+        time.sleep(1)
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected counterclockwise")
+        send_write_request(bus, Register.APPLY_SETTINGS, [0xFF, 0x00], unlock=False)
+        time.sleep(1)
+        print(f"{'spin direction:':<} {get_spin_dir(bus)}, expected counterclockwise")
+
+        print()
+
+        print("Unlocking, resetting to clockwise and restarting")
+        bus.send(unlock_msg)
         send_write_request(bus, Register.SPIN_DIR, [0x00, 0x00], unlock=False)
         send_write_request(bus, Register.APPLY_SETTINGS, [0x00, 0x00], unlock=False)
         send_write_request(bus, Register.APPLY_SETTINGS, [0xFF, 0x00], unlock=False)
