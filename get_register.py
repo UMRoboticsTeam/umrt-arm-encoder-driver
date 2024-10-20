@@ -382,9 +382,9 @@ def get_encoder_mode(bus):
     if msg is not None:
         match msg.data[2]:
             case 0x00:
-                baud_rate = 'single'
+                encoder_mode = 'single'
             case 0x01:
-                baud_rate = 'multi'
+                encoder_mode = 'multi'
     return encoder_mode
 
 
