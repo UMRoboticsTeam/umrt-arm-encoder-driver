@@ -15,6 +15,10 @@ private:
 	CANAPI_Message_t message; 
 	char serial_port[32]; 
 	static volatile int exception_flag;
+	void handle_angle(uint8_t* message_data); 
+	void handle_temp(uint8_t* message_data); 
+	void handle_all(uint8_t* message_data); 
+	void handle_delta(uint8_t* message_data); 
 public: 
 	Interface(uint32_t baudrate_param = CANBTR_INDEX_250K , uint32_t opmode_param = CANMODE_DEFAULT, const char* serial_port_param = "/dev/ttyS3");
 	CANAPI_Return_t initialize_channel(); 
