@@ -92,9 +92,9 @@ void Interface::handle_temp(uint8_t* message_data){
 	}
 }; 
 
-// void Interface::handle_delta(uint8_t* message_data){
+void Interface::handle_delta(uint8_t* message_data){
 
-// }; 
+}; 
 
 
 CANAPI_Return_t Interface::teardown_channel(){ 
