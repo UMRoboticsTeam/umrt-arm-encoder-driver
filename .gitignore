@@ -1,5 +1,4 @@
 /.idea/
 cmake-build-*
-cpp/SerialCAN
 cpp/out
 .vscode/
