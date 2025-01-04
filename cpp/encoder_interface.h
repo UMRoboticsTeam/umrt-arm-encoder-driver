@@ -1,6 +1,6 @@
 #ifndef ENCODER_INTERFACE
 #define ENCODER_INTERFACE
-
+#include <boost/signals2/signal.hpp>
 #include <cstring>
 #include <iostream> 
 #include "./SerialCAN/Includes/SerialCAN.h"
@@ -25,6 +25,9 @@ public:
 	void begin_read_loop(const char type ='e', int timeout = 0); // e-all messages (default), a-angles only, t-temperature only
 	CANAPI_Return_t teardown_channel(); 
 	void static signal_handler(int signal); 
+	boost::signals2::signal<void(uint16_t angular_velocity_register, double angular_velocity, uint16_t number_gof_rotations)> angle_signal; 
+	boost::signals2::signal<void(uint16_t temp_register, double temp)> temp_signal; 
+	boost::signals2::signal<void(CANAPI_Message_t)> verbose_signal; 
 }; 
 
 
