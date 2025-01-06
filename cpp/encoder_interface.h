@@ -25,8 +25,8 @@ public:
 	void begin_read_loop(const char type ='e', int timeout = 0); // e-all messages (default), a-angles only, t-temperature only
 	CANAPI_Return_t teardown_channel(); 
 	void static signal_handler(int signal); 
-	boost::signals2::signal<void(uint16_t angular_velocity_register, double angular_velocity, uint16_t number_gof_rotations)> angle_signal; 
-	boost::signals2::signal<void(uint16_t temp_register, double temp)> temp_signal; 
+	boost::signals2::signal<void(uint32_t can_id, double angle, double angular_velocity, uint16_t number_of_rotations)> angle_signal; 
+	boost::signals2::signal<void(uint32_t can_id, double temp)> temp_signal; 
 	boost::signals2::signal<void(CANAPI_Message_t)> verbose_signal; 
 }; 
 

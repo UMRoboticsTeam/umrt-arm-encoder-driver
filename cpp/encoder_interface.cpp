@@ -63,6 +63,9 @@ void Interface::begin_read_loop(const char type, int timeout){
 							exception_flag = 0;
 					}
 				}
+				else{
+					BOOST_LOG_TRIVIAL(error)<<"[x] invalid data length"; 
+				}
 		}
 	}
 }; 
@@ -78,7 +81,7 @@ void Interface::handle_angle(uint8_t* message_data){
 		uint16_t angular_velocity_register = message_data[5]<<8|message_data[4]; 
 		double angular_velocity = angular_velocity_register * ((360/32768)/0.1); 
 		uint16_t number_of_rotations = message_data[8]<<8|message_data[7]; 
-		angle_signal(angular_velocity_register,angular_velocity,number_of_rotations); 
+		angle_signal(message.id,angle,angular_velocity,number_of_rotations); 
 	}
 }; 
 
@@ -86,7 +89,7 @@ void Interface::handle_temp(uint8_t* message_data){
 	if(message_data[0] == 0x55 && message_data[1] == 0x56){
 		uint16_t temperature_register = message_data[3]<<8|message_data[2]; 
 		double temperature = temperature_register/100; 
-		temp_signal(temperature_register,temperature); 
+		temp_signal(message.id,temperature); 
 	}
 }; 
 
