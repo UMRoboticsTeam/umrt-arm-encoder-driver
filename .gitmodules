@@ -1,0 +1,3 @@
+[submodule "cpp/SerialCAN"]
+	path = cpp/SerialCAN
+	url = https://github.com/mac-can/SerialCAN
