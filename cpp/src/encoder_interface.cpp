@@ -1,10 +1,4 @@
 #include "encoder_interface.h"
-#include <iostream>
-#include <signal.h>
-#include <ctime>
-#include <boost/signals2/signal.hpp>
-#include <boost/log/trivial.hpp>
-
 
 
 volatile int Interface::exception_flag = 1; 
@@ -42,7 +36,7 @@ CANAPI_Return_t Interface::initialize_channel(){
 
 void Interface::begin_read_loop(const char type, int timeout){
 	int start_time = std::time(nullptr); 
-	while(timeout?exception_flag&start_time-std::time(nullptr)<=timeout:exception_flag){
+	while(timeout?exception_flag&&(start_time-std::time(nullptr)<=timeout):exception_flag){
 		if(ret_val = mySerialCAN.ReadMessage(message,timeout?timeout:CANREAD_INFINITE) == CSerialCAN::NoError){
 				if(message.dlc == 8){
 					switch(type){

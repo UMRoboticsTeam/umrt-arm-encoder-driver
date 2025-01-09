@@ -3,7 +3,13 @@
 #include <boost/signals2/signal.hpp>
 #include <cstring>
 #include <iostream> 
-#include "./SerialCAN/Includes/SerialCAN.h"
+#include "../include/SerialCAN/Includes/SerialCAN.h"
+#include <iostream>
+#include <signal.h>
+#include <ctime>
+#include <boost/signals2/signal.hpp>
+#include <boost/log/trivial.hpp>
+
 
 static CSerialCAN mySerialCAN = CSerialCAN(); 
 
