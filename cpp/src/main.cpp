@@ -5,7 +5,8 @@
 
 
 int main(int argc, char**argv){
-	Interface myInterface{Interface()}; 
-	myInterface.initialize_channel(); 
-	std::cout <<CSerialCAN::GetVersion<< std::endl; 		
+	// Interface myInterface{Interface()}; 
+	// myInterface.initialize_channel(); 
+	// //std::cout <<CSerialCAN::GetVersion<< std::endl;
+	return 0;  		
 };
