@@ -8,13 +8,12 @@ Interface::Interface(uint32_t baudrate_param, uint32_t opmode_param, const char*
 	this->opmode.byte = opmode_param;
 	strncpy(serial_port,serial_port_param, sizeof(serial_port)); 
 	signal(SIGINT,signal_handler); //set up signal handler on class initialization
-
 }; 
 
 CANAPI_Return_t Interface::initialize_channel(){
 
 	if((ret_val = mySerialCAN.InitializeChannel(serial_port,opmode)) != CSerialCAN::NoError){
-		BOOST_LOG_TRIVIAL(error)<< "[x] interface could not be initialzed \n"; 
+		BOOST_LOG_TRIVIAL(error)<< "[x] interface could not be initialzed "<<exception_flag <<" \n"; 
 	}
 	else{
 		BOOST_LOG_TRIVIAL(info)<<" [o] initialized channel at "<<serial_port<<". \n";
@@ -32,30 +31,21 @@ CANAPI_Return_t Interface::initialize_channel(){
 }
 
 
+std::thread Interface::test_channel(){
+	std::thread loop_thread([](){int counter = 0; while(true){BOOST_LOG_TRIVIAL(info)<<"test loop ["<<counter<<"] \n"; sleep(5); counter++;}}); 
+	return loop_thread; 
+}
 
-
-void Interface::begin_read_loop(const char type, int timeout){
+void Interface::begin_read_loop(int timeout){
 	int start_time = std::time(nullptr); 
 	while(timeout?exception_flag&&(start_time-std::time(nullptr)<=timeout):exception_flag){
 		if(ret_val = mySerialCAN.ReadMessage(message,timeout?timeout:CANREAD_INFINITE) == CSerialCAN::NoError){
 				if(message.dlc == 8){
-					switch(type){
-						case 'a':
 							handle_angle(message.data); 
-							break; 
-						case 't':
 							handle_temp(message.data); 
-							break; 
-						case 'e':
 							handle_all(message.data); 
-							break; 
-						case 'd':
 							handle_delta(message.data);
-							break; 
-						default:
-							BOOST_LOG_TRIVIAL(error)<<"[x] unknown read operation "<<type<<" exiting..."<<"\n"; 
-							exception_flag = 0;
-					}
+					
 				}
 				else{
 					BOOST_LOG_TRIVIAL(error)<<"[x] invalid data length"; 
@@ -104,7 +94,9 @@ CANAPI_Return_t Interface::teardown_channel(){
 
 
 void Interface::signal_handler(int signal){
+	BOOST_LOG_TRIVIAL(info)<<"[o] keyboard interrupt identified \n"; 
 	mySerialCAN.SignalChannel(); //kills all channels
 	exception_flag = 0; //ends read loop; 
+	exit(0); 
 }; 
 
