@@ -4,3 +4,6 @@
 [submodule "cpp/include/SerialCAN"]
 	path = cpp/include/SerialCAN
 	url = https://github.com/mac-can/SerialCAN/tree/main
+[submodule "cpp/include/SLCAN"]
+	path = cpp/include/SLCAN
+	url = https://github.com/mac-can/SLCAN
