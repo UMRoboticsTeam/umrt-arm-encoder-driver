@@ -35,8 +35,8 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 ##### FROM TONI ######
 # Do we need all of these?
-target_link_libraries(${PROJECT_NAME} Boost::log Boost::log_setup Boost::thread Boost::system Boost::filesystem pthread)
-target_link_directories(${PROJECT_NAME} ${Boost_LIBRARIES})
+#target_link_libraries(${PROJECT_NAME} Boost::log Boost::log_setup Boost::thread Boost::system Boost::filesystem pthread)
+#target_link_directories(${PROJECT_NAME} ${Boost_LIBRARIES})
 ######################
 
 # ********** Setup umrt_arm_firmware_lib library **********
@@ -74,21 +74,21 @@ set(encoder_dump_sources
         src/main.cpp
         )
 set_source_files_properties(
-        ${communication_test_script_sources}
+        ${encoder_dump_sources}
         PROPERTIES language "CXX")
 add_executable(
-        ${communication_test_target}
-        ${communication_test_script_sources})
-target_include_directories(${communication_test_target} PUBLIC
+        ${encoder_dump_target}
+        ${encoder_dump_sources})
+target_include_directories(${encoder_dump_target} PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-target_link_libraries(${communication_test_target}
+target_link_libraries(${encoder_dump_target}
         ${PROJECT_NAME}
         )
 
-set_target_properties(${communication_test_target} PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(${encoder_dump_target} PROPERTIES LINKER_LANGUAGE CXX)
 
 # ********** Setup packaging **********
 
@@ -100,9 +100,9 @@ install(TARGETS ${PROJECT_NAME}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         )
 
-install(TARGETS ${communication_test_target}
-        EXPORT "${communication_test_target}Targets"
-        COMPONENT ${communication_test_target}
+install(TARGETS ${encoder_dump_target}
+        EXPORT "${encoder_dump_target}Targets"
+        COMPONENT ${encoder_dump_target}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         )
