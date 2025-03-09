@@ -14,13 +14,7 @@ target_link_libraries(${PROJECT_NAME}  Boost::log Boost::log_setup Boost::thread
 target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/include/SerialCAN/Binaries/libserialcan.a)
-target_link_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/SerialCAN/Binaries)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/SerialCAN/Includes/)
 
-target_link_libraries(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/include/SLCAN/Binaries/libslcan.a)
-target_link_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/SLCAN/Binaries)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/SLCAN/Includes/)
 
 
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
