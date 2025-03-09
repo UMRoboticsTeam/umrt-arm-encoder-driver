@@ -3,9 +3,6 @@ project(cpp_arm_encoder_driver)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(ament_cmake REQUIRED)
-
-
 add_library(${PROJECT_NAME} src/encoder_interface.cpp src/main.cpp)
 
 find_package(Boost REQUIRED COMPONENTS log log_setup thread system filesystem)
