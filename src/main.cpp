@@ -1,4 +1,4 @@
-#include "arm-encoder-driver/encoder_interface.h"
+#include "encoder_interface.h"
 #include <boost/signals2/slot.hpp>
 #include <iostream>
 
