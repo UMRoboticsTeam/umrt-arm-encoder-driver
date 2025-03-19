@@ -3,7 +3,7 @@ This example attempt to retrieve the current angle from the encoder
 """
 import string
 
-COM_PORT = '/dev/ttyACM15'
+COM_PORT = '/dev/ttyACM3'
 DEVICE_ADDR = 0x50
 
 import can

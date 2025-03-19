@@ -12,10 +12,10 @@ void angle_handler(uint32_t can_id, double angle, double angular_vel, uint16_t n
 
 
 int main(int argc, char** argv) {
-    Interface myInterface{ Interface() };
-    myInterface.angle_signal.connect([&](uint32_t can_id, double angle, double angular_vel, uint16_t n_rotations) { angle_handler(can_id, angle, angular_vel, n_rotations); });
-    myInterface.temp_signal.connect([&](uint32_t can_id, double temp) { temperature_handler(can_id, temp); });
-    if (myInterface.initialize_channel() == 0) {
+    EncoderInterface myInterface{ EncoderInterface() };
+    myInterface.angle_signal.connect([](uint32_t can_id, double angle, double angular_vel, uint16_t n_rotations) { angle_handler(can_id, angle, angular_vel, n_rotations); });
+    myInterface.temp_signal.connect([](uint32_t can_id, double temp) { temperature_handler(can_id, temp); });
+    if (myInterface.initialize_channel("can0") == 0) {
         myInterface.begin_read_loop();
     }
 
