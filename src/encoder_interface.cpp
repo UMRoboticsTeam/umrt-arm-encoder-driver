@@ -50,8 +50,6 @@ void EncoderInterface::begin_read_loop() {
             handle_angle(message.data, message.can_id);
             handle_temp(message.data, message.can_id);
             handle_all(message);
-            handle_delta(message.data, previous_data);
-            previous_data = message.data;
         } else {
             BOOST_LOG_TRIVIAL(error) << "[x] invalid data length " << message.len;
         }
@@ -81,17 +79,3 @@ void EncoderInterface::handle_temp(const uint8_t* message_data, const uint32_t c
     }
 };
 
-void EncoderInterface::handle_delta(const uint8_t* message_data, const uint8_t* previous_data) {
-    if (message_data[1] == previous_data[1]) { //if both messages are of same type i.e both temperature messages or both angle messages then find difference
-        if (message_data[1] == 0x56) {
-            BOOST_LOG_TRIVIAL(debug) << "previous message data : ";
-            for (int i = 0; i < 8; i++) {
-                BOOST_LOG_TRIVIAL(debug) << previous_data[i] << " ";
-            }
-            BOOST_LOG_TRIVIAL(debug) << "current message data : ";
-            for (int i = 0; i < 8; i++) {
-                BOOST_LOG_TRIVIAL(debug) << message_data[i] << " ";
-            }
-        }
-    }
-};
