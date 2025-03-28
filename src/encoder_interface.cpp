@@ -1,8 +1,8 @@
 #include "encoder_interface.h"
 
-using std::uint8_t;
 using std::uint16_t;
 using std::uint32_t;
+using std::uint8_t;
 
 EncoderInterface::~EncoderInterface() {
     if (can_socket >= 0) {
@@ -58,11 +58,11 @@ void EncoderInterface::begin_read_loop() {
     }
 };
 
-void EncoderInterface::handle_all(can_frame message) {
+void EncoderInterface::handle_all(const can_frame& message) {
     verbose_signal(message);
 };
 
-void EncoderInterface::handle_angle(uint8_t* message_data, uint32_t can_id) {
+void EncoderInterface::handle_angle(const uint8_t* message_data, const uint32_t can_id) {
     if (message_data[0] == 0x55 && message_data[1] == 0x55) {
         uint16_t angle_register_value = uint16_t(message_data[3]) << 8 | message_data[2];
         double angle = angle_register_value * 360 / 32768;
@@ -73,7 +73,7 @@ void EncoderInterface::handle_angle(uint8_t* message_data, uint32_t can_id) {
     }
 };
 
-void EncoderInterface::handle_temp(uint8_t* message_data, uint32_t can_id) {
+void EncoderInterface::handle_temp(const uint8_t* message_data, const uint32_t can_id) {
     if (message_data[0] == 0x55 && message_data[1] == 0x56) {
         uint16_t temperature_register_value = uint16_t(message_data[3]) << 8 | message_data[2];
         int temperature = temperature_register_value / 100;
@@ -81,7 +81,7 @@ void EncoderInterface::handle_temp(uint8_t* message_data, uint32_t can_id) {
     }
 };
 
-void EncoderInterface::handle_delta(uint8_t* message_data, uint8_t* previous_data) {
+void EncoderInterface::handle_delta(const uint8_t* message_data, const uint8_t* previous_data) {
     if (message_data[1] == previous_data[1]) { //if both messages are of same type i.e both temperature messages or both angle messages then find difference
         if (message_data[1] == 0x56) {
             BOOST_LOG_TRIVIAL(debug) << "previous message data : ";

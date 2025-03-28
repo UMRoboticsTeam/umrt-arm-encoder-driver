@@ -29,10 +29,10 @@ private:
     int can_socket = 0;
     uint8_t* previous_data = nullptr;
 
-    void handle_angle(std::uint8_t* message_data, std::uint32_t can_id);
-    void handle_temp(std::uint8_t* message_data, std::uint32_t can_id);
-    void handle_all(can_frame message);
-    void handle_delta(std::uint8_t* message_data, std::uint8_t* previous_data);
+    void handle_angle(const std::uint8_t* message_data, const std::uint32_t can_id);
+    void handle_temp(const  std::uint8_t* message_data, const std::uint32_t can_id);
+    void handle_all(const can_frame & message);
+    void handle_delta(const std::uint8_t* message_data, const std::uint8_t* previous_data);
 };
 
 
