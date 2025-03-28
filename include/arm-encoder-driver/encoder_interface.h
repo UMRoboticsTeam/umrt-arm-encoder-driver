@@ -19,6 +19,15 @@ typedef uint8_t __u8;
 
 
 class EncoderInterface {
+public:
+    EncoderInterface() = default;
+    ~EncoderInterface();
+    int initialize_channel(const char* can_interface);
+    void begin_read_loop();
+    boost::signals2::signal<void(uint32_t can_id, double angle, double angular_velocity, uint16_t number_of_rotations)> angle_signal;
+    boost::signals2::signal<void(uint32_t can_id, double temp)> temp_signal;
+    boost::signals2::signal<void(struct can_frame)> verbose_signal;
+
 private:
     struct ifreq ifr;
     struct sockaddr_can addr;
@@ -31,15 +40,6 @@ private:
     void handle_all(can_frame message);
     void handle_delta(uint8_t* message_data, uint8_t* previous_data);
 
-
-public:
-    EncoderInterface() = default;
-    ~EncoderInterface();
-    int initialize_channel(const char* can_interface);
-    void begin_read_loop();
-    boost::signals2::signal<void(uint32_t can_id, double angle, double angular_velocity, uint16_t number_of_rotations)> angle_signal;
-    boost::signals2::signal<void(uint32_t can_id, double temp)> temp_signal;
-    boost::signals2::signal<void(struct can_frame)> verbose_signal;
 };
 
 
