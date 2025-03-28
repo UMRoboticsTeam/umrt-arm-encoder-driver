@@ -1,5 +1,5 @@
-#ifndef ARM_ENCODER_DRIVER_ENCODER_INTERFACE_H
-#define ARM_ENCODER_DRIVER_ENCODER_INTERFACE_H
+#ifndef ARM_ENCODER_DRIVER_ENCODER_INTERFACE_HPP
+#define ARM_ENCODER_DRIVER_ENCODER_INTERFACE_HPP
 #include <boost/log/trivial.hpp>
 #include <boost/signals2/signal.hpp>
 #include <cstdint>
@@ -35,4 +35,4 @@ private:
 };
 
 
-#endif //ARM_ENCODER_DRIVER_ENCODER_INTERFACE_H
+#endif //ARM_ENCODER_DRIVER_ENCODER_INTERFACE_HPP

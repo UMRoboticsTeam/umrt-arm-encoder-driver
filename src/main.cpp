@@ -1,4 +1,4 @@
-#include "encoder_interface.h"
+#include "encoder_interface.hpp"
 #include <boost/signals2/slot.hpp>
 #include <iostream>
 

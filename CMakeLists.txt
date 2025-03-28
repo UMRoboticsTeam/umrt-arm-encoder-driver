@@ -61,7 +61,7 @@ target_link_libraries(${PROJECT_NAME}
         )
 
 set(public_headers
-        include/arm-encoder-driver/encoder_interface.h
+        include/arm-encoder-driver/encoder_interface.hpp
         )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)

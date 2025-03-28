@@ -1,4 +1,4 @@
-#include "encoder_interface.h"
+#include "encoder_interface.hpp"
 
 using std::uint16_t;
 using std::uint32_t;
