@@ -65,7 +65,7 @@ void EncoderInterface::handle_angle(const uint8_t* message_data, const uint32_t 
         uint16_t angle_register_value = static_cast<uint16_t>(message_data[3] << 8) | message_data[2];
         double angle = angle_register_value * 360.0 / 32768;
         uint16_t angular_velocity_register_value = static_cast<uint16_t>(message_data[5] << 8) | message_data[4];
-        double angular_velocity = angular_velocity_register_value * 360.0 / 32768 / 0.1;
+        double angular_velocity = angular_velocity_register_value * 360.0 / 32768 / ANGULAR_VELOCITY_SAMPLE_TIME;
         uint16_t number_of_rotations = static_cast<uint16_t>(message_data[7] << 8) | message_data[6];
         angle_signal(can_id, angle, angular_velocity, number_of_rotations);
     }

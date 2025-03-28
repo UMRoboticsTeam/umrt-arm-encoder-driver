@@ -16,6 +16,8 @@
 
 class EncoderInterface {
 public:
+    const double ANGULAR_VELOCITY_SAMPLE_TIME = 0.1;
+
     EncoderInterface() = default;
     ~EncoderInterface();
     int initialize_channel(const std::string& can_interface);
