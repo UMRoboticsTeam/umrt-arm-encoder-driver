@@ -44,7 +44,7 @@ int EncoderInterface::initialize_channel(const char* can_interface) {
 void EncoderInterface::begin_read_loop() {
     BOOST_LOG_TRIVIAL(info) << "[+] beginning read loop: ";
     while (true) {
-        can_frame message;
+        can_frame message{};
         ssize_t nbytes = read(can_socket, &message, sizeof(can_frame));
         if (nbytes > 0 && message.len == 8) {
             handle_angle(message.data, message.can_id);

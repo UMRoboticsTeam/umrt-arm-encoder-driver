@@ -24,11 +24,10 @@ public:
     boost::signals2::signal<void(struct can_frame)> verbose_signal;
 
 private:
-    struct ifreq ifr;
-    struct sockaddr_can addr;
-    int can_socket;
-    uint8_t* previous_data;
-
+    ifreq ifr{};
+    sockaddr_can addr{};
+    int can_socket = 0;
+    uint8_t* previous_data = nullptr;
 
     void handle_angle(std::uint8_t* message_data, std::uint32_t can_id);
     void handle_temp(std::uint8_t* message_data, std::uint32_t can_id);
