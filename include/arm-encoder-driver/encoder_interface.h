@@ -27,8 +27,6 @@ private:
     uint8_t* previous_data; 
 
 
-
-    static volatile int exception_flag;
     void handle_angle(uint8_t* message_data, uint32_t can_id);
     void handle_temp(uint8_t* message_data, uint32_t can_id);
     void handle_all(can_frame message);

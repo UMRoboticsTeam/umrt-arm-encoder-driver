@@ -1,27 +1,5 @@
 #include "encoder_interface.h"
 
-// int Interface::map_to_socket_can() {
-//     int ret;
-//     std::ostringstream map_command;
-//     map_command << "sudo slcand -o -c " << baud_rate_string << " " << serial_port << " " << can_interface;
-
-//     std::string map_command_string = map_command.str();
-//     BOOST_LOG_TRIVIAL(info) << "[+] Executing system command: " << map_command_string;
-
-//     ret = std::system(map_command_string.c_str());
-//     if (ret == 0) {
-//         std::ostringstream ip_command;
-
-//         ip_command << "sudo ip link set " << can_interface << " up";
-//         std::string ip_command_string = ip_command.str();
-//         BOOST_LOG_TRIVIAL(info) << "[+] Executing system command: " << ip_command_string;
-//         ret = std::system(ip_command_string.c_str());
-//     }
-
-//     return ret;
-// }
-
-
 EncoderInterface::~EncoderInterface(){
     if(can_socket >= 0){
         close(can_socket); 
