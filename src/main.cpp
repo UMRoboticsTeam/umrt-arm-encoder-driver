@@ -2,6 +2,9 @@
 #include <boost/signals2/slot.hpp>
 #include <iostream>
 
+using std::uint16_t;
+using std::uint32_t;
+
 void temperature_handler(uint32_t can_id, double temp) {
 
     BOOST_LOG_TRIVIAL(info) << "can_id: " << can_id << " temp: " << temp << "\n";

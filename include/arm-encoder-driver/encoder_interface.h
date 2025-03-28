@@ -2,6 +2,7 @@
 #define ENCODER_INTERFACE
 #include <boost/log/trivial.hpp>
 #include <boost/signals2/signal.hpp>
+#include <cstdint>
 #include <cstdlib>
 #include <fcntl.h>
 #include <iostream>
@@ -12,20 +13,14 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-
-#ifdef __linux__
-typedef uint8_t __u8;
-#endif
-
-
 class EncoderInterface {
 public:
     EncoderInterface() = default;
     ~EncoderInterface();
     int initialize_channel(const char* can_interface);
     void begin_read_loop();
-    boost::signals2::signal<void(uint32_t can_id, double angle, double angular_velocity, uint16_t number_of_rotations)> angle_signal;
-    boost::signals2::signal<void(uint32_t can_id, double temp)> temp_signal;
+    boost::signals2::signal<void(std::uint32_t can_id, double angle, double angular_velocity, std::uint16_t number_of_rotations)> angle_signal;
+    boost::signals2::signal<void(std::uint32_t can_id, double temp)> temp_signal;
     boost::signals2::signal<void(struct can_frame)> verbose_signal;
 
 private:
@@ -35,11 +30,10 @@ private:
     uint8_t* previous_data;
 
 
-    void handle_angle(uint8_t* message_data, uint32_t can_id);
-    void handle_temp(uint8_t* message_data, uint32_t can_id);
+    void handle_angle(std::uint8_t* message_data, std::uint32_t can_id);
+    void handle_temp(std::uint8_t* message_data, std::uint32_t can_id);
     void handle_all(can_frame message);
-    void handle_delta(uint8_t* message_data, uint8_t* previous_data);
-
+    void handle_delta(std::uint8_t* message_data, std::uint8_t* previous_data);
 };
 
 

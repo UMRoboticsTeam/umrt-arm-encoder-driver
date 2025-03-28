@@ -1,5 +1,9 @@
 #include "encoder_interface.h"
 
+using std::uint8_t;
+using std::uint16_t;
+using std::uint32_t;
+
 EncoderInterface::~EncoderInterface() {
     if (can_socket >= 0) {
         close(can_socket);
