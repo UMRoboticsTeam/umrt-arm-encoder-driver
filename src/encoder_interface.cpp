@@ -11,7 +11,7 @@ EncoderInterface::~EncoderInterface() {
     }
 };
 
-int EncoderInterface::initialize_channel(const char* can_interface) {
+int EncoderInterface::initialize_channel(const std::string & can_interface) {
     BOOST_LOG_TRIVIAL(info) << "[+] initializing channel: ";
 
     BOOST_LOG_TRIVIAL(info) << "[+] initializing socket";
@@ -21,7 +21,7 @@ int EncoderInterface::initialize_channel(const char* can_interface) {
         return -1;
     }
 
-    strcpy(ifr.ifr_name, can_interface);
+    strcpy(ifr.ifr_name, can_interface.c_str());
     BOOST_LOG_TRIVIAL(info) << "[+] fetching interface";
     if (ioctl(can_socket, SIOGIFINDEX, &ifr) < 0) {
         BOOST_LOG_TRIVIAL(error) << "[x] could not find can interface: " << can_interface;
