@@ -5,17 +5,16 @@
 using std::uint16_t;
 using std::uint32_t;
 
-void temperature_handler(uint32_t can_id, double temp) {
-
+void temperature_handler(uint32_t can_id, uint16_t temp) {
     BOOST_LOG_TRIVIAL(info) << "can_id: " << can_id << " temp: " << temp << "\n";
 };
-void angle_handler(uint32_t can_id, double angle, double angular_vel, uint16_t n_rotations) {
+void angle_handler(uint32_t can_id, uint16_t angle, uint16_t angular_vel, uint16_t n_rotations) {
     BOOST_LOG_TRIVIAL(info) << "can_id: " << can_id << " velocity: " << angular_vel << " num rotations: " << n_rotations << "\n";
 };
 
 
 int main(int argc, char** argv) {
-    EncoderInterface myInterface{ EncoderInterface() };
+    
 
     // Grab interface name from the CLI if it was provided, otherwise default to can0
     std::string can_interface = "can0";
@@ -23,11 +22,14 @@ int main(int argc, char** argv) {
         can_interface = argv[0];
     }
 
-    myInterface.angle_signal.connect([](uint32_t can_id, double angle, double angular_vel, uint16_t n_rotations) { angle_handler(can_id, angle, angular_vel, n_rotations); });
-    myInterface.temp_signal.connect([](uint32_t can_id, double temp) { temperature_handler(can_id, temp); });
-    if (myInterface.initialize_channel(can_interface) == 0) {
-        myInterface.begin_read_loop();
-    }
+    //initial can interface 
+    EncoderInterface myInterface(can_interface);
+
+    //set up signal handlers
+    myInterface.angle_signal.connect([](uint32_t can_id, uint16_t angle, uint16_t angular_vel, uint16_t n_rotations) { angle_handler(can_id, angle, angular_vel, n_rotations); });
+    myInterface.temp_signal.connect([](uint32_t can_id, uint16_t temp) { temperature_handler(can_id, temp); });
+
+    myInterface.begin_read_loop();
 
     return 0;
 };

@@ -13,14 +13,14 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <stdexcept>
 
 class EncoderInterface {
 public:
     const double ANGULAR_VELOCITY_SAMPLE_TIME = 0.1;
 
-    EncoderInterface() = default;
+    EncoderInterface(const std::string& can_inteface);
     ~EncoderInterface();
-    int initialize_channel(const std::string& can_interface);
     void begin_read_loop();
     boost::signals2::signal<void(std::uint32_t can_id, double angle, double angular_velocity, std::uint16_t number_of_rotations)> angle_signal;
     boost::signals2::signal<void(std::uint32_t can_id, double temp)> temp_signal;
@@ -29,7 +29,7 @@ public:
 private:
     ifreq ifr{};
     sockaddr_can addr{};
-    int can_socket = 0;
+    int can_socket = -1;
 
     void handle_angle(const std::uint8_t* message_data, const std::uint32_t can_id);
     void handle_temp(const std::uint8_t* message_data, const std::uint32_t can_id);
