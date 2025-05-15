@@ -9,7 +9,7 @@ void temperature_handler(uint32_t can_id, uint16_t temp) {
     BOOST_LOG_TRIVIAL(info) << "can_id: " << can_id << " temp: " << temp << "\n";
 };
 void angle_handler(uint32_t can_id, uint16_t angle, uint16_t angular_vel, uint16_t n_rotations) {
-    BOOST_LOG_TRIVIAL(info) << "can_id: " << can_id << " velocity: " << angular_vel << " num rotations: " << n_rotations << "\n";
+    BOOST_LOG_TRIVIAL(info) << "can_id: " << can_id <<" angle: " <<angle<<" velocity: " << angular_vel << " num rotations: " << n_rotations << "\n";
 };
 
 

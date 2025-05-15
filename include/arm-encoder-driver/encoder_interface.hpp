@@ -22,9 +22,11 @@ public:
     EncoderInterface(const std::string& can_inteface);
     ~EncoderInterface();
     void begin_read_loop();
-    boost::signals2::signal<void(std::uint32_t can_id, double angle, double angular_velocity, std::uint16_t number_of_rotations)> angle_signal;
-    boost::signals2::signal<void(std::uint32_t can_id, double temp)> temp_signal;
+    boost::signals2::signal<void(std::uint32_t can_id, uint16_t angle, uint16_t angular_velocity, std::uint16_t number_of_rotations)> angle_signal;
+    boost::signals2::signal<void(std::uint32_t can_id, uint16_t temp)> temp_signal;
     boost::signals2::signal<void(struct can_frame)> verbose_signal;
+    boost::signals2::signal<void(std::uint32_t can_id, uint16_t temp_raw)> temp_signal_raw;
+    boost::signals2::signal<void(std::uint32_t can_id, uint16_t angle_raw, uint16_t angular_velocity_raw, std::uint16_t number_of_rotations)> angle_signal_raw;
 
 private:
     ifreq ifr{};
