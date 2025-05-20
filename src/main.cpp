@@ -18,8 +18,8 @@ int main(int argc, char** argv) {
 
     // Grab interface name from the CLI if it was provided, otherwise default to can0
     std::string can_interface = "can0";
-    if (argc > 0) {
-        can_interface = argv[0];
+    if (argc > 1) {
+        can_interface = argv[1];
     }
 
     //initial can interface 
