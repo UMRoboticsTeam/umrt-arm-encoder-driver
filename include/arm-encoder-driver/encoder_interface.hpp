@@ -15,12 +15,14 @@
 #include <unistd.h>
 #include <stdexcept>
 #include <cerrno>
+#include <unordered_set>
+#include <memory>
 
 class EncoderInterface {
 public:
     
-
-    EncoderInterface(const std::string& can_interface, double angular_velocity_sample_time = 0.1);
+    EncoderInterface() = default; 
+    EncoderInterface(const std::string& can_interface, std::shared_ptr< const std::unordered_set<uint32_t>> encoder_can_ids, double angular_velocity_sample_time = 0.1 );
     ~EncoderInterface();
     void begin_read_loop();
     boost::signals2::signal<void(std::uint32_t can_id, double angle, double angular_velocity, std::uint16_t number_of_rotations)> angle_signal;
@@ -34,6 +36,7 @@ private:
     sockaddr_can addr{};
     int can_socket = -1;
     double m_angular_velocity_sample_time{}; 
+    std::shared_ptr<const std::unordered_set<uint32_t>>m_encoder_can_ids{nullptr}; 
 
     void handle_angle(const std::uint8_t* message_data, const std::uint32_t can_id);
     void handle_temp(const std::uint8_t* message_data, const std::uint32_t can_id);

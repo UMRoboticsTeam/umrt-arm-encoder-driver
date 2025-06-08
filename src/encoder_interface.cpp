@@ -4,8 +4,9 @@ using std::uint16_t;
 using std::uint32_t;
 using std::uint8_t;
 
-EncoderInterface::EncoderInterface(const std::string& can_interface, double angular_velocity_sample_time): m_angular_velocity_sample_time(angular_velocity_sample_time)
+EncoderInterface::EncoderInterface(const std::string& can_interface, std::shared_ptr< const std::unordered_set<uint32_t>> encoder_can_ids, double angular_velocity_sample_time): m_angular_velocity_sample_time(angular_velocity_sample_time)
 {
+    m_encoder_can_ids = std::move(encoder_can_ids); 
     BOOST_LOG_TRIVIAL(info) << "[+] initializing channel";
 
     BOOST_LOG_TRIVIAL(info) << "[+] initializing socket";
@@ -15,8 +16,10 @@ EncoderInterface::EncoderInterface(const std::string& can_interface, double angu
         throw std::runtime_error("[x] could not open socket"); 
     }
 
-    strcpy(ifr.ifr_name, can_interface.c_str());
+    strncpy(ifr.ifr_name, can_interface.c_str(), IFNAMSIZ - 1);
+    ifr.ifr_name[IFNAMSIZ - 1] = '\0';    
     BOOST_LOG_TRIVIAL(info) << "[+] fetching interface";
+
     if (ioctl(can_socket, SIOGIFINDEX, &ifr) < 0) {
         BOOST_LOG_TRIVIAL(error) << "[x] could not find can interface: " << can_interface;
         close(can_socket);
@@ -44,16 +47,21 @@ EncoderInterface::~EncoderInterface() {
 
 
 void EncoderInterface::begin_read_loop() {
+    if(can_socket <0){
+        throw std::runtime_error("[x] can_socket not valid"); 
+    }
     BOOST_LOG_TRIVIAL(info) << "[+] beginning read loop: ";
     while (true) {
         can_frame message{};
         ssize_t nbytes = read(can_socket, &message, sizeof(can_frame));
-        if (nbytes > 0 && message.len == 8) {
-            handle_angle(message.data, message.can_id);
-            handle_temp(message.data, message.can_id);
-            handle_all(message);
-        } else {
-            BOOST_LOG_TRIVIAL(error) << "[x] invalid data length " << message.len;
+        if(m_encoder_can_ids->count(message.can_id)){
+            if (nbytes > 0 && message.len == 8) {
+                handle_angle(message.data, message.can_id);
+                handle_temp(message.data, message.can_id);
+                handle_all(message);
+            } else {
+                BOOST_LOG_TRIVIAL(error) << "[x] invalid data length " << message.len;
+            }
         }
     }
 };
@@ -61,6 +69,8 @@ void EncoderInterface::begin_read_loop() {
 void EncoderInterface::handle_all(const can_frame& message) {
     verbose_signal(message);
 };
+
+
 
 
 

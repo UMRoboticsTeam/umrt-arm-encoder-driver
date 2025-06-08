@@ -22,8 +22,10 @@ int main(int argc, char** argv) {
         can_interface = argv[1];
     }
 
+    std::shared_ptr<const std::unordered_set<uint32_t>> encoder_can_ids = std::make_shared<const std::unordered_set<uint32_t>>(std::initializer_list<uint32_t>{}); 
+
     //initial can interface 
-    EncoderInterface myInterface(can_interface);
+    EncoderInterface myInterface(can_interface, encoder_can_ids);
 
     //set up signal handlers
     myInterface.angle_signal.connect([](uint32_t can_id, uint16_t angle, uint16_t angular_vel, uint16_t n_rotations) { angle_handler(can_id, angle, angular_vel, n_rotations); });
