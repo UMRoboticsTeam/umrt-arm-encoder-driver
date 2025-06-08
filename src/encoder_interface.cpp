@@ -54,8 +54,8 @@ void EncoderInterface::begin_read_loop() {
     while (true) {
         can_frame message{};
         ssize_t nbytes = read(can_socket, &message, sizeof(can_frame));
-        if(m_encoder_can_ids->count(message.can_id)){
-            if (nbytes > 0 && message.len == 8) {
+        if(nbytes > 0 && m_encoder_can_ids->count(message.can_id)){
+            if (message.len == 8) {
                 handle_angle(message.data, message.can_id);
                 handle_temp(message.data, message.can_id);
                 handle_all(message);
