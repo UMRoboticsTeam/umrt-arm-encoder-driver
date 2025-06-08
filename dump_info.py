@@ -11,7 +11,7 @@ def dump_all():
 
     # this uses the default configuration (for example from environment variables, or a
     # config file) see https://python-can.readthedocs.io/en/stable/configuration.html
-    with can.Bus(interface='slcan', channel='COM5', bitrate=250000) as bus:
+    with can.Bus(interface='slcan', channel='/dev/ttyACM2', bitrate=250000) as bus:
         # set to read-only, only supported on some interfaces
         try:
             bus.state = BusState.PASSIVE
@@ -34,7 +34,7 @@ def dump_delta():
 
     # this uses the default configuration (for example from environment variables, or a
     # config file) see https://python-can.readthedocs.io/en/stable/configuration.html
-    with can.Bus(interface='slcan', channel='COM5', bitrate=250000) as bus:
+    with can.Bus(interface='slcan', channel='/dev/ttyACM2', bitrate=250000) as bus:
         # set to read-only, only supported on some interfaces
         try:
             bus.state = BusState.PASSIVE
@@ -62,7 +62,7 @@ def dump_just_angle():
 
     # this uses the default configuration (for example from environment variables, or a
     # config file) see https://python-can.readthedocs.io/en/stable/configuration.html
-    with can.Bus(interface='slcan', channel='COM5', bitrate=250000) as bus:
+    with can.Bus(interface='slcan', channel='/dev/ttyACM2', bitrate=250000) as bus:
         # set to read-only, only supported on some interfaces
         try:
             bus.state = BusState.PASSIVE
@@ -112,7 +112,7 @@ def dump_just_temp():
 
     # this uses the default configuration (for example from environment variables, or a
     # config file) see https://python-can.readthedocs.io/en/stable/configuration.html
-    with can.Bus(interface='slcan', channel='COM5', bitrate=250000) as bus:
+    with can.Bus(interface='slcan', channel='/dev/ttyACM2', bitrate=250000) as bus:
         # set to read-only, only supported on some interfaces
         try:
             bus.state = BusState.PASSIVE
