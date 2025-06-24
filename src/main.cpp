@@ -31,6 +31,7 @@ int main(int argc, char** argv) {
     myInterface.angle_signal.connect([](uint32_t can_id, uint16_t angle, uint16_t angular_vel, uint16_t n_rotations) { angle_handler(can_id, angle, angular_vel, n_rotations); });
     myInterface.temp_signal.connect([](uint32_t can_id, uint16_t temp) { temperature_handler(can_id, temp); });
 
+    //start recieving CAN messages
     myInterface.begin_read_loop();
 
     return 0;
