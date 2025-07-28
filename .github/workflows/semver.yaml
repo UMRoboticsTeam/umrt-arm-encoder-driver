@@ -3,7 +3,7 @@ name: Assert version is incremented
 on:
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   check-version:
