@@ -1,7 +1,5 @@
-cmake_minimum_required(VERSION 3.5)
-project(arm-encoder-driver)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+cmake_minimum_required(VERSION 3.22.1)
+project(umrt-arm-encoder-driver)
 
 # ********** Setup CMake **********
 
@@ -23,76 +21,90 @@ if(NOT WIN32)
 endif()
 
 # Setup Boost
-find_package(Boost REQUIRED COMPONENTS log log_setup thread system filesystem)
+find_package(Boost REQUIRED COMPONENTS log log_setup thread system)
 include_directories(${Boost_INCLUDE_DIRS})
 
-# ********** Setup umrt_arm_firmware_lib library **********
+# ********** Setup umrt-arm-encoder-driver library **********
 
-set(umrt_arm_firmware_lib_sources
+set(lib_target ${PROJECT_NAME})
+
+add_library(${lib_target})
+
+target_sources(${lib_target} PRIVATE # These files will only be available during building
         src/encoder_interface.cpp
-        )
-set_source_files_properties(
-        ${umrt_arm_firmware_lib_sources}
-        PROPERTIES language "CXX")
-add_library(
-        ${PROJECT_NAME}
-        ${umrt_arm_firmware_lib_sources})
-target_include_directories(${PROJECT_NAME} PUBLIC
+)
+
+# Locate headers
+# Using FILE_SET would be much cleaner, but needs CMake 3.23+ and ROS Humble ships with 3.22
+set(public_headers # These files will be installed with the library
+        include/umrt-arm-encoder-driver/encoder_interface.hpp
+)
+set_property(TARGET ${lib_target} PROPERTY PUBLIC_HEADER ${public_headers})
+target_include_directories(${lib_target} PUBLIC # Everything in this folder will be available during building
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}>"
         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-
-target_link_libraries(${PROJECT_NAME}
-        ${Boost_LIBRARIES}
-        )
-
-set(public_headers
-        include/arm-encoder-driver/encoder_interface.hpp
-        )
-
-set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers}")
+target_link_libraries(${lib_target} PUBLIC
+        Boost::log
+        Boost::log_setup
+)
 
 # ********** Setup encoder_dump executable **********
 
 set(encoder_dump_target encoder_dump)
-set(encoder_dump_sources
+
+add_executable(${encoder_dump_target})
+
+target_sources(${encoder_dump_target} PRIVATE
         src/main.cpp
-        )
-set_source_files_properties(
-        ${encoder_dump_sources}
-        PROPERTIES language "CXX")
-add_executable(
-        ${encoder_dump_target}
-        ${encoder_dump_sources})
-target_include_directories(${encoder_dump_target} PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
-        "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+)
 
-target_link_libraries(${encoder_dump_target}
-        ${PROJECT_NAME}
-        )
-
-set_target_properties(${encoder_dump_target} PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(${encoder_dump_target} PRIVATE
+        Boost::log_setup
+        Boost::log
+        ${lib_target}
+)
 
 # ********** Setup packaging **********
 
 include(GNUInstallDirs)
-install(TARGETS ${PROJECT_NAME}
-        EXPORT "${PROJECT_NAME}Targets"
-        COMPONENT ${PROJECT_NAME}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        )
+include(CMakePackageConfigHelpers)
 
-install(TARGETS ${encoder_dump_target}
-        EXPORT "${encoder_dump_target}Targets"
-        COMPONENT ${encoder_dump_target}
+# Parse version number from the file
+file(READ "version" version_input)
+string(REGEX MATCH "([0-9]+)\.([0-9]+)\.([0-9]+)" _ ${version_input})
+
+# Fill in cmake variables in config template
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/config.in.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        @ONLY
+)
+
+write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        VERSION ${version_input}
+        COMPATIBILITY AnyNewerVersion
+)
+
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}
+)
+
+install(
+        TARGETS ${lib_target} ${encoder_dump_target} # These targets will be packaged
+        EXPORT ${PROJECT_NAME}Targets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        )
+)
+
+install(
+        EXPORT ${PROJECT_NAME}Targets
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}
+)
 
 message(STATUS "Components to pack: ${CPACK_COMPONENTS_ALL}")
 include(cpack.cmake)
