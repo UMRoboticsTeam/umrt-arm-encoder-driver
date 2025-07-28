@@ -1,7 +1,8 @@
 set(MAINTAINER_NAME "Noah Reeder <noahreederatc@gmail.com>")
-set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 0)
-set(PROJECT_VERSION_PATCH 1)
+
+set(PROJECT_VERSION_MAJOR ${CMAKE_MATCH_1})
+set(PROJECT_VERSION_MINOR ${CMAKE_MATCH_2})
+set(PROJECT_VERSION_PATCH ${CMAKE_MATCH_3})
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Library for interacting with the encoders on the University of Manitoba Robotics Team's robotic arm"
         CACHE STRING "Package description for the package metadata"
