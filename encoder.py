@@ -1,6 +1,3 @@
-COM_PORT = "can1"
-DEVICE_ADDR = 0x51
-
 import can
 import sys
 import time
@@ -126,9 +123,8 @@ def create_read_request_msg(register: Register):
 
 def create_write_request_msg(register: Register, payload: list[2]):
     assert isinstance(register, Register), "register must be valid"
-    assert (
-        type(payload) == list and len(payload) == 2
-    ), "payload must be a list of length 2"
+    assert type(payload) == list, "payload must be a list"
+    assert len(payload) == 2, "payload must have length 2"
     return [0xFF, 0xAA, register, payload[0], payload[1]]
 
 
@@ -235,7 +231,7 @@ class Encoder:
                 data=msg,
                 is_extended_id=False,
             )
-        print(f"Sending: ", [hex(i)[2:] for i in list(msg.data)])
+        print(f"Sending:", hex(self.id), [hex(i)[2:] for i in list(msg.data)])
         try:
             self.bus.send(msg, timeout)
             time.sleep(0.1)
@@ -614,7 +610,8 @@ class Encoder:
     def set_device_addr(self, address):
         if address < 0 or address >= 2e11:
             raise ValueError("Invalid CAN address provided")
-        payload = int.to_bytes(address, 2, byteorder="little", signed=False)
+        payload = list(int.to_bytes(address, 2, byteorder="little", signed=False))
+
         self.send_write_request(Register.DEVICE_ADDR, payload)
 
     def get_version_num_l(self):
@@ -632,8 +629,8 @@ class Encoder:
         return version_num_h
 
 
-def test_write_settings():
-    with can.Bus(interface="socketcan", channel=COM_PORT, bitrate=250000) as bus:
+def test_write_settings(interface, channel, bitrate):
+    with can.Bus(interface=interface, channel=channel, bitrate=bitrate) as bus:
         enc = Encoder(bus, 0x51)
         # Check that we are currently in clockwise
         print("Begin settings write test:")
@@ -723,14 +720,19 @@ def test_write_settings():
         # TODO: Should test factory resetting, feels dangerous though...
 
 
-def main():
+def main(interface, channel, bitrate):
     # Get the address
-    with can.Bus(interface="socketcan", channel=COM_PORT, bitrate=250000) as bus:
+    with can.Bus(interface=interface, channel=channel, bitrate=bitrate) as bus:
         enc = Encoder(bus, 0x51)
         enc.read_all_settings()
         enc.print_all_settings()
 
 
 if __name__ == "__main__":
-    # test_write_settings()
-    main()
+    # Define bus connection here:
+    interface = "socketcan"
+    channel = "can1"
+    bitrate = 250_000
+
+    # test_write_settings(interface, channel, bitrate)
+    main(interface, channel, bitrate)
