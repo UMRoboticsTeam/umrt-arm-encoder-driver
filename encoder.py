@@ -259,7 +259,7 @@ class Encoder:
         return None
 
     def unlock(self):
-        self.sent_unlock = self._send(Encoder.MSG_UNLOCK)
+        self.sent_unlock = self._send(MSG_UNLOCK)
         return self.sent_unlock
 
     def read_all(self, /, include=None, pause=0.1):
