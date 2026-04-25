@@ -29,8 +29,17 @@
 
 class EncoderInterface {
 public:
-    
-    EncoderInterface() = default; 
+    /**
+     * CAN messages for an angle measurement from the encoder always begin with these two bytes.
+     */
+    static constexpr uint8_t ENCODER_ANGLE_MESSAGE_PREFIX[] = { 55, 55 };
+
+    /**
+     * CAN messages for an temperature measurement from the encoder always begin with these two bytes.
+     */
+    static constexpr uint8_t ENCODER_TEMP_MESSAGE_PREFIX[] = { 55, 56 };
+
+    EncoderInterface() = default;
     /**
      * Initializes EncoderInterface channel.
      * @param can_interface can interface of the listening device; defaults to "can0". 
@@ -54,7 +63,7 @@ public:
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> 
      * triggered by @ref handle_angle.
      */
-    boost::signals2::signal<void(std::uint32_t can_id, double angle, double angular_velocity, std::uint16_t number_of_rotations)> angle_signal;
+    boost::signals2::signal<void(std::uint32_t can_id, double angle, double angular_velocity, std::int16_t number_of_rotations)> angle_signal;
     /**
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> 
      * triggered by @ref handle_temp.
@@ -74,7 +83,7 @@ public:
      * <a href=https://www.boost.org/doc/libs/1_63_0/doc/html/signals.html>Boost signal</a> 
      * triggered by @ref handle_angle. gives raw(unaltered) values
      */
-    boost::signals2::signal<void(std::uint32_t can_id, uint16_t angle_raw, uint16_t angular_velocity_raw, std::uint16_t number_of_rotations)> angle_signal_raw;
+    boost::signals2::signal<void(std::uint32_t can_id, uint16_t angle_raw, uint16_t angular_velocity_raw, std::int16_t number_of_rotations)> angle_signal_raw;
 
 private:
     ifreq ifr{};
