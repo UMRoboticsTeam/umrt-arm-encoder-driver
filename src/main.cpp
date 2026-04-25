@@ -16,25 +16,23 @@ void angle_handler(uint32_t can_id, uint16_t angle, uint16_t angular_vel, int16_
 
 
 int main(int argc, char** argv) {
-    
-
     // Grab interface name from the CLI if it was provided, otherwise default to can0
     std::string can_interface = DEFAULT_CAN_DEVICE;
     if (argc > 1) {
         can_interface = argv[1];
     }
 
-    std::shared_ptr<const std::unordered_set<uint32_t>> encoder_can_ids = std::make_shared<const std::unordered_set<uint32_t>>(std::initializer_list<uint32_t>{}); 
+    auto encoder_can_ids = std::make_shared<const std::unordered_set<uint32_t>>(std::initializer_list<uint32_t>{});
 
-    //initial can interface 
-    EncoderInterface myInterface(can_interface, encoder_can_ids);
+    // Create encoder
+    EncoderInterface encoder(can_interface, encoder_can_ids);
 
     // Set up signal handlers
     encoder.angle_signal.connect([](uint32_t can_id, int16_t angle, uint16_t angular_vel, uint16_t n_rotations) { angle_handler(can_id, angle, angular_vel, n_rotations); });
     encoder.temp_signal.connect([](uint32_t can_id, double temp) { temperature_handler(can_id, temp); });
 
-    //start recieving CAN messages
-    myInterface.begin_read_loop();
+    // Start receiving CAN messages
+    encoder.begin_read_loop();
 
     return 0;
 };
