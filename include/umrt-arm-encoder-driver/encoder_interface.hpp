@@ -32,12 +32,12 @@ public:
     /**
      * CAN messages for an angle measurement from the encoder always begin with these two bytes.
      */
-    static constexpr uint8_t ENCODER_ANGLE_MESSAGE_PREFIX[] = { 55, 55 };
+    static constexpr uint8_t ENCODER_ANGLE_MESSAGE_PREFIX[] = { 0x55, 0x55 };
 
     /**
      * CAN messages for an temperature measurement from the encoder always begin with these two bytes.
      */
-    static constexpr uint8_t ENCODER_TEMP_MESSAGE_PREFIX[] = { 55, 56 };
+    static constexpr uint8_t ENCODER_TEMP_MESSAGE_PREFIX[] = { 0x55, 0x56 };
 
     EncoderInterface() = default;
     /**
